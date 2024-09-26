@@ -16,7 +16,7 @@ router.head('/', async (req, res) => {
   }
 });
 
-// Health check endpoint for OPTIONS requests
+// Health check endpoint for  requests
 router.options('/', async (req, res) => {
     try {
       await sequelize.authenticate(); // Check database connection
