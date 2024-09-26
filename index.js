@@ -29,6 +29,10 @@ app.all('/healthz', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.status(405).send(); // Return 405 for unsupported methods
 });
+// Custom 404 handler for unknown routes
+app.use((req, res) => {
+  res.status(404).json(); // Return a JSON error response for unmatched routes
+});
 
 // Start the server and listen on the specified port
 app.listen(port, () => {
