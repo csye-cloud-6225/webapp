@@ -1,24 +1,24 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const sequelize = require('./config/database'); // Database connection setup
-const healthzRoutes = require('./routes/healthz'); // Route handlers for health checks
+const healthzRoutes = require('./routes/healthz'); // Route handlers for APIs
 
 const app = express();
 const port = 8080;
 
 dotenv.config(); // Load environment variables from .env file
 
-// Middleware to ensure database is accessible for each request
+// Ensures database is accessible for each request
 const checkDbConnection = async (req, res, next) => {
   try {
     await sequelize.authenticate(); // Verifies database connection
-    next(); // Continue to next middleware or route if successful
+    next(); 
   } catch (error) {
     return res.status(503).send(); // Return 503 if the database connection fails
   }
 };
 
-// Middleware to block non-GET requests that include a payload
+// Blocks non-GET requests that include a payload
 app.use((req, res, next) => {
   if (req.headers['content-length'] > 0) {
     return res.status(400).send(); // Return 400 for non-GET requests with a body
@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 // Apply the database connection check before handling routes
 app.use(checkDbConnection);
 
-// Health check endpoint routes
+// API endpoint routes
 app.use('/healthz', healthzRoutes);
 
 // Handle unsupported HTTP methods for the /healthz endpoint
