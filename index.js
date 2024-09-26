@@ -18,14 +18,6 @@ const checkDbConnection = async (req, res, next) => {
   }
 };
 
-// Blocks non-GET requests that include a payload
-app.use((req, res, next) => {
-  if (req.headers['content-length'] > 0) {
-    return res.status(400).send(); // Return 400 for non-GET requests with a body
-  }
-  next();
-});
-
 // Apply the database connection check before handling routes
 app.use(checkDbConnection);
 
@@ -36,11 +28,6 @@ app.use('/healthz', healthzRoutes);
 app.all('/healthz', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.status(405).send(); // Return 405 for unsupported methods
-});
-
-// Handle 404 for unknown routes with an empty body
-app.use((req, res) => {
-  res.status(404).send(); // Return 404 with no body content
 });
 
 // Start the server and listen on the specified port
