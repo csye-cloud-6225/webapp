@@ -1,0 +1,44 @@
+**RESTful API Health Check**
+A simple RESTful API built using Node.js, Express, and Sequelize.
+
+**Project Structure**
+index.js
+config/database.js - 
+routes/healthz.js
+
+**Prerequisites**
+- Node.js (v14+)
+- NPM: Node Package Manager
+- MySQL database
+- Sequelize 
+- Express
+- Environment Variable in a .env file
+
+**Set your environment variables as shown below:**
+DB_NAME=your_database_name
+USER=your_database_user
+PASSWORD=your_database_password
+DB_HOST=your_database_host
+
+**Setup**
+- Clone your repository
+- Install dependencies : `npm install`
+- Start the server : `npm start`
+- Once the application is running, you can access it at http://localhost:8080
+  
+**Health Check**
+GET /healthz:
+
+curl -X GET http://localhost:8080/healthz
+- Returns 200 OK if the database is connected
+- Returns 503 Service Unavailable if not
+  
+HEAD /healthz:
+
+curl -X HEAD http://localhost:8080/healthz
+Always returns `405 Method Not Allowed`
+
+OPTIONS /healthz:
+
+curl -X OPTIONS http://localhost:8080/healthz
+Always returns `405 Method Not Allowed`

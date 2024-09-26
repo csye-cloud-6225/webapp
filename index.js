@@ -1,44 +1,49 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const sequelize = require('./config/database'); // Import DB connection
-const healthzRoutes = require('./routes/healthz'); // Import healthz routes
+const sequelize = require('./config/database'); // Database connection setup
+const healthzRoutes = require('./routes/healthz'); // Route handlers for health checks
 
 const app = express();
 const port = 8080;
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env file
 
-// Middleware to check database connection on every request
+// Middleware to ensure database is accessible for each request
 const checkDbConnection = async (req, res, next) => {
   try {
-    await sequelize.authenticate(); // Check database connection
-    next(); // Proceed to the next middleware or route handler
+    await sequelize.authenticate(); // Verifies database connection
+    next(); // Continue to next middleware or route if successful
   } catch (error) {
-    return res.status(503).send(); // 503 Service Unavailable if DB is not connected
+    return res.status(503).send(); // Return 503 if the database connection fails
   }
 };
 
-// Middleware to reject requests with a payload for non-GET requests
+// Middleware to block non-GET requests that include a payload
 app.use((req, res, next) => {
   if (req.headers['content-length'] > 0) {
-    return res.status(400).send(); // Reject requests with a payload
+    return res.status(400).send(); // Return 400 for non-GET requests with a body
   }
   next();
 });
 
-// Apply the DB connection check middleware
+// Apply the database connection check before handling routes
 app.use(checkDbConnection);
 
-// Health check routes
+// Health check endpoint routes
 app.use('/healthz', healthzRoutes);
 
-// Handle unsupported methods globally
-app.all('*', (req, res) => {
+// Handle unsupported HTTP methods for the /healthz endpoint
+app.all('/healthz', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.status(405).send(); // 405 Method Not Allowed
+  res.status(405).send(); // Return 405 for unsupported methods
 });
 
-// Start the server
+// Handle 404 for unknown routes with an empty body
+app.use((req, res) => {
+  res.status(404).send(); // Return 404 with no body content
+});
+
+// Start the server and listen on the specified port
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server is up and running at http://localhost:${port}`);
 });
