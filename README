@@ -42,3 +42,12 @@ OPTIONS /healthz:
 
 curl -X OPTIONS http://localhost:8080/healthz
 Always returns `405 Method Not Allowed`
+
+**USER ROUTES** (routes/user.js)
+The user.js file contains the user-related endpoints and their handlers:
+1. POST/v1/user: Endpoint for creating a new user.
+- Validates input and checks for duplicate emails.
+2. GET/v1/user/self: Endpoint for retrieving authenticated user details.
+- Requires Basic Authentication for access.
+3. PUT/v1/user/self: Endpoint for updating user information.
+- Allows updating first name, last name, and password while validating the fields.
