@@ -21,8 +21,8 @@ const authenticate = async (req, res, next) => {
             // Validate user credentials
             const user = await User.findOne({ where: { email } });
             if (!user || !(await bcrypt.compare(password, user.password))) {
-                console.log('Invalid Basic credentials provided');
-                return res.status(401).json({ error: 'Invalid credentials' });
+                console.log('Invalid Basic credentials provided auth');
+                return res.status(401).json({ error: 'Invalid credentials auth error' });
             }
 
             // Store user ID and other user details in req.user
