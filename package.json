@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "setup-test-db": "node config/setup-test-db.js",
+    "test:integration": "jest integration.test.js --forceExit"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "supertest": "^7.0.0"
   }
 }

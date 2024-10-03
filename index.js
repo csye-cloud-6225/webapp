@@ -36,7 +36,7 @@ app.use(checkDbConnection);
 
 // API endpoint routes
 app.use('/healthz', healthzRoutes);
-app.use('/user', userRoutes);
+app.use('/v1', userRoutes);
 
 // Handle unsupported HTTP methods for the /healthz endpoint
 app.all('/healthz', (req, res) => {
@@ -49,7 +49,11 @@ app.use((req, res) => {
   res.status(404).json(); // Return a JSON error response for unmatched routes
 });
 
-// Start the server and listen on the specified port
-app.listen(port, () => {
-  console.log(`Server is up and running at http://localhost:${port}`);
-});
+// Start the server and listen on the specified port if this is the main module
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server is up and running at http://localhost:${port}`);
+  });
+}
+
+module.exports = app; // Export the app for testing

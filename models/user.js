@@ -4,13 +4,8 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // Define association here
     }
   }
 
@@ -50,15 +45,27 @@ module.exports = (sequelize, DataTypes) => {
     // Use hooks to update account_updated field on every update
     hooks: {
       beforeCreate: async (user, options) => {
+        // Log the incoming password before hashing
+        console.log('Password before hashing (beforeCreate):', user.password);
+
         // Hash password before creating the user
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
+
+        // Log the hashed password
+        console.log('Password after hashing (beforeCreate):', user.password);
       },
       beforeUpdate: async (user, options) => {
         if (user.changed('password')) {
+          // Log the incoming password before hashing
+          console.log('Password before hashing (beforeUpdate):', user.password);
+
           // Hash password before updating if it was changed
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
+
+          // Log the hashed password
+          console.log('Password after hashing (beforeUpdate):', user.password);
         }
         // Update the account_updated timestamp
         user.account_updated = new Date();
