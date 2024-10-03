@@ -53,7 +53,10 @@ The user.js file contains the user-related endpoints and their handlers:
 - Allows updating first name, last name, and password while validating the fields.
 
 **TESTING**
-Unit and integration tests are included in the `tests` directory. You can run tests jest.
-`npm test`
+Unit and integration tests are included in the `tests` directory. 
+You can run tests jest - `npm test`
 
 Integration testing
+You can run integration tests with the following commands
+`node config/setup-test-db.js` - For the database
+`npm run test:integration` - To run integration tests
