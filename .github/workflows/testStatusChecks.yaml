@@ -34,9 +34,9 @@ jobs:
     - name: Set up test database
       run: node config/setup-test-db.js
       env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        USER: root
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{secrets.DB_PORT}}
+        USER: ${{secrets.root}}
         PASSWORD: Parna.coM001
     - name: Run Jest tests
       run: npm test
