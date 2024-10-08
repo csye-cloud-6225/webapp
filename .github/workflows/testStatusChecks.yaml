@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Set up test database
+        run: npm run setup-test-db  # Ensure the test database is set up before running tests
+
       - name: Run tests
-        run: npm test  # Replace with your test command
-      
-      - name: Run tests
-        run: node index.js  # Replace with your test command
+        run: npm test  # This runs both your Jest and integration tests
