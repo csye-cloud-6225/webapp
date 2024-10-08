@@ -23,3 +23,6 @@ jobs:
 
       - name: Run tests
         run: npm test  # Replace with your test command
+      
+      - name: Run tests
+        run: node index.js  # Replace with your test command
