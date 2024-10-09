@@ -31,28 +31,46 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
+    - name: Debug environment variables
+      run: |
+        echo "Debugging environment variables:"
+        echo "DB_HOST is set: ${{ secrets.DB_HOST != '' }}"
+        echo "DB_PORT is set: ${{ secrets.DB_PORT != '' }}"
+        echo "USER is set: ${{ secrets.USER != '' }}"
+        echo "MYSQL_ROOT_PASSWORD is set: ${{ secrets.MYSQL_ROOT_PASSWORD != '' }}"
+        echo "APP_PORT is set: ${{ secrets.APP_PORT != '' }}"
+        echo "Node version: ${{ matrix.node-version }}"
+        echo "GitHub workspace: ${{ github.workspace }}"
+        echo "GitHub event name: ${{ github.event_name }}"
+        env | grep -v -i key | grep -v -i token | grep -v -i password | sort
     - name: Set up test database
-      run: node config/setup-test-db.js
+      run: |
+        echo "Setting up test database..."
+        node config/setup-test-db.js
       env:
-        DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: ${{secrets.DB_PORT}}
-        USER: ${{secrets.USER}}
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        USER: root
         PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
     - name: Run Jest tests
-      run: npm test
+      run: |
+        echo "Running Jest tests..."
+        npm test
       env:
-        APP_PORT: ${{ secrets.APP_PORT}}
-        DB_PORT: ${{secrets.DB_PORT}}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        USER: ${{secrets.USER}}
+        APP_PORT: ${{ secrets.APP_PORT }}
+        DB_PORT: 3306
+        DB_HOST: 127.0.0.1
+        USER: root
         PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
         DB_NAME: test_db
     - name: Run integration tests
-      run: npm run test:integration
+      run: |
+        echo "Running integration tests..."
+        npm run test:integration
       env:
-        APP_PORT: ${{ secrets.APP_PORT}}
-        DB_PORT: ${{secrets.DB_PORT}}
-        DB_HOST: ${{ secrets.DB_HOST }}
-        USER: ${{secrets.USER}}
+        APP_PORT: ${{ secrets.APP_PORT }}
+        DB_PORT: 3306
+        DB_HOST: 127.0.0.1
+        USER: root
         PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
         DB_NAME: test_db
