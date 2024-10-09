@@ -28,16 +28,19 @@ jobs:
       with:
         node-version: '16'
 
-    - name: Clear npm cache
-      run: npm cache clean --force
-
     - name: Install dependencies
       run: npm install
+
+    - name: List directory contents
+      run: |
+        pwd
+        ls -R config
 
     - name: Set up test database
       run: |
         mysql -h127.0.0.1 -uroot -pParna.coM001 -e "CREATE DATABASE IF NOT EXISTS test_db;"
-        node config/setupTestDatabase.js
+        node config/database.js
+        node config/setup-test-database.js
 
     - name: Run tests
       env:
