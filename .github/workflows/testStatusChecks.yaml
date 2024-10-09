@@ -1,76 +1,57 @@
-name: Node.js CI
+name: Continuous Integration
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 jobs:
   test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: Parna.coM001
+          MYSQL_DATABASE: health_check
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - name: Debug environment variables
-      run: |
-        echo "Debugging environment variables:"
-        echo "DB_HOST is set: ${{ secrets.DB_HOST != '' }}"
-        echo "DB_PORT is set: ${{ secrets.DB_PORT != '' }}"
-        echo "USER is set: ${{ secrets.USER != '' }}"
-        echo "MYSQL_ROOT_PASSWORD is set: ${{ secrets.MYSQL_ROOT_PASSWORD != '' }}"
-        echo "APP_PORT is set: ${{ secrets.APP_PORT != '' }}"
-        echo "Node version: ${{ matrix.node-version }}"
-        echo "GitHub workspace: ${{ github.workspace }}"
-        echo "GitHub event name: ${{ github.event_name }}"
-        env | grep -v -i key | grep -v -i token | grep -v -i password | sort
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm ci
+
     - name: Set up test database
       run: |
-        echo "Setting up test database..."
-        node config/setup-test-db.js
+        mysql -h127.0.0.1 -uroot -pParna.coM001 -e "CREATE DATABASE IF NOT EXISTS test_db;"
+        node config/setupTestDatabase.js
+
+    - name: Run tests
       env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        USER: root
-        PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-    - name: Run Jest tests
-      run: |
-        echo "Running Jest tests..."
-        npm test
-      env:
-        APP_PORT: ${{ secrets.APP_PORT }}
+        APP_PORT: 8080
         DB_PORT: 3306
         DB_HOST: 127.0.0.1
         USER: root
-        PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        DB_NAME: test_db
+        PASSWORD: Parna.coM001
+        DB_NAME: health_check
+      run: npm test
+
     - name: Run integration tests
-      run: |
-        echo "Running integration tests..."
-        npm run test:integration
       env:
-        APP_PORT: ${{ secrets.APP_PORT }}
+        APP_PORT: 8080
         DB_PORT: 3306
         DB_HOST: 127.0.0.1
         USER: root
-        PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        DB_NAME: test_db
+        PASSWORD: Parna.coM001
+        DB_NAME: health_check
+      run: npm run test:integration
