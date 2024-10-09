@@ -14,6 +14,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: Parna.coM001
+          MYSQL_DATABASE: health_check
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -30,14 +31,6 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: List config directory contents
-      run: ls -l config/
-
-    - name: Set up test database
-      run: |
-        echo "Running database setup script"
-        node config/setupTestDatabase.js
-
     - name: Run tests
       env:
         APP_PORT: 8080
@@ -45,7 +38,7 @@ jobs:
         DB_HOST: 127.0.0.1
         USER: root
         PASSWORD: Parna.coM001
-        DB_NAME: test_db
+        DB_NAME: health_check
       run: npm test
 
     - name: Run integration tests
@@ -55,5 +48,5 @@ jobs:
         DB_HOST: 127.0.0.1
         USER: root
         PASSWORD: Parna.coM001
-        DB_NAME: test_db
+        DB_NAME: health_check
       run: npm run test:integration
