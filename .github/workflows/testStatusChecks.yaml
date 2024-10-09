@@ -26,15 +26,21 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '14'
+        node-version: '16'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
+
+    - name: List directory contents
+      run: |
+        pwd
+        ls -R config
 
     - name: Set up test database
       run: |
         mysql -h127.0.0.1 -uroot -pParna.coM001 -e "CREATE DATABASE IF NOT EXISTS test_db;"
-        node config/setupTestDatabase.js
+        node config/database.js
+        node config/setup-test-database.js
 
     - name: Run tests
       env:
