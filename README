@@ -61,3 +61,19 @@ Integration testing
 You can run integration tests with the following commands
 `node config/setup-test-db.js` - For the database
 `npm run test:integration` - To run integration tests
+
+**Continuous Integration (CI)**
+The CI workflow is triggered on pull requests to the main branch and performs the following tasks:
+
+1. Sets up the testing environment with Node.js and MySQL.
+2. Installs project dependencies.
+3. Runs unit tests.
+4. Runs integration tests.
+
+The CI configuration can be found in the `.github/workflows` directory of the repository.
+
+1. Make your changes in a new branch.
+2. Create a pull request to the main branch.
+3. Wait for the CI checks to complete.
+4. Review the results and make any necessary adjustments.
+5. Once all checks pass, your code is ready for review and merge.
