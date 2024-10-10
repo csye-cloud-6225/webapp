@@ -33,7 +33,7 @@ describe('User API', () => {
   describe('POST /v1/user', () => {
     it('should create a new user', async () => {
       const newUser = {
-        email: 'test@example',
+        email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
         password: 'password123',
