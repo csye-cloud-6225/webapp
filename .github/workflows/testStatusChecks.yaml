@@ -13,15 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Packer
-        uses: hashicorp/setup-packer@v1
-
-      - name: Run packer fmt
+      - name: Set up Packer (using Docker)
         run: |
-          echo "Checking Packer file formatting..."
-          packer fmt -check . || exit 1  # If it fails, exit with error code
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace hashicorp/packer:latest fmt -check .
 
       - name: Run packer validate
         run: |
-          echo "Validating Packer configuration..."
-          packer validate . || exit 1  # Exit if validation fails
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace hashicorp/packer:latest validate .
