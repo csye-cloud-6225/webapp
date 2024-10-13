@@ -3,7 +3,7 @@ name: Packer Status Check
 on:
   pull_request:
     branches:
-      - main  # Adjust this to your default branch if necessary
+      - main  # Change to your default branch if it's not 'main'
 
 jobs:
   fmt:
@@ -16,6 +16,10 @@ jobs:
       - name: Run Packer Format Check
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest fmt -check test.pkr.hcl
+
+      - name: Run Packer Init
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest init
 
       - name: Run Packer Validate
         run: |
