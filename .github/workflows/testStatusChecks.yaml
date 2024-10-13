@@ -1,22 +1,52 @@
-name: Packer Status Check
+name: Continuous Integration
 
 on:
   pull_request:
-    branches:
-      - main  # Change to your default branch if it's not 'main'
+    branches: [main]
 
 jobs:
-  fmt:
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.Password }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Packer (using Docker)
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace hashicorp/packer:latest fmt -check .
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
 
-      - name: Run packer validate
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace hashicorp/packer:latest validate .
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      env:
+        APP_PORT: ${{ secrets.APP_PORT }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        USER: ${{ secrets.USER }}
+        PASSWORD: ${{ secrets.Password}}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: npm test
+
+    - name: Run integration tests
+      env:
+        APP_PORT: ${{ secrets.APP_PORT }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_HOST: ${{ secrets.DB_HOST }}
+        USER: ${{ secrets.USER }}
+        PASSWORD: ${{ secrets.Password}}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: npm run test:integration
