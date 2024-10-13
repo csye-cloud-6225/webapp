@@ -19,8 +19,10 @@ jobs:
 
       - name: Run Packer Init
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest init test.pkr.hcl
+          # Run packer init to install missing plugins
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest init test.pkr.hcl || { echo "Packer init failed"; exit 1; }
 
       - name: Run Packer Validate
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest validate test.pkr.hcl
+          # Validate the Packer template
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest validate test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
