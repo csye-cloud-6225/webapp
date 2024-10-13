@@ -19,7 +19,7 @@ jobs:
 
       - name: Run Packer Init
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest init
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest init test.pkr.hcl
 
       - name: Run Packer Validate
         run: |
