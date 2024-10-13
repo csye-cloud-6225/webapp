@@ -3,7 +3,7 @@ name: Packer Status Check
 on:
   pull_request:
     branches:
-      - main  # Change to your default branch if it's not 'main'
+      - main  # Adjust this to your default branch if necessary
 
 jobs:
   fmt:
@@ -13,12 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Packer
-        uses: hashicorp/setup-packer@v1
+      - name: Run Packer Format Check
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest fmt -check test.pkr.hcl
 
-      - name: Run packer fmt
-        run: packer fmt -check .
-
-      - name: Run packer validate
-        run: packer validate .
-
+      - name: Run Packer Validate
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest validate test.pkr.hcl
