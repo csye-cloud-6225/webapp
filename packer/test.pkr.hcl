@@ -76,8 +76,8 @@ build {
   # Add this new shell provisioner
   provisioner "shell" {
     inline = [
-      "echo 'DB_PASSWORD=${var.db_password}' >> /tmp/env_vars",
-      "echo 'DB_NAME=${var.db_name}' >> /tmp/env_vars"
+      "echo 'Password=${var.Password}' >> /tmp/env_vars",
+      "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
     ]
   }
 

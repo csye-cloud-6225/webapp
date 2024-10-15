@@ -34,13 +34,13 @@ jobs:
       - name: Run Packer Validate
         env:
           MY_APP_SERVICE_CONTENT: ${{ secrets.MY_APP_SERVICE_CONTENT }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
-          -e MY_APP_SERVICE_CONTENT -e DB_PASSWORD -e DB_NAME \
+          -e MY_APP_SERVICE_CONTENT -e Password -e DB_NAME \
           -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
-          -var "my_app_service_content=${MY_APP_SERVICE_CONTENT}" \
-          -var "db_password=${DB_PASSWORD}" \
-          -var "db_name=${DB_NAME}" \
+          -var "MY_APP_SERVICE_CONTENT=${MY_APP_SERVICE_CONTENT}" \
+          -var "Password=${Password}" \
+          -var "DB_NAME=${DB_NAME}" \
           test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
