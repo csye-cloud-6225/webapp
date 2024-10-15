@@ -64,7 +64,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo '${var.my_app_service_content}' > /tmp/my-app.service"
+      "echo '${secrets.my_app_service_content}' > /tmp/my-app.service"
     ]
   }
 
