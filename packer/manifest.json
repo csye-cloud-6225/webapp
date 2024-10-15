@@ -53,7 +53,133 @@
       "artifact_id": "us-east-1:ami-0178f564dc2423beb",
       "packer_run_uuid": "89a03ba4-48d9-e1d4-76cb-ca3c412ba4d0",
       "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728809083,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0d9c71b52ada96dbe",
+      "packer_run_uuid": "5491fb45-4b9b-8364-fc3b-a1706a317d31",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728874730,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0616f8823de641a10",
+      "packer_run_uuid": "a2f944af-1c22-1041-51c0-8c342a2eeaf0",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728876830,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0195e63c4fd00f38d",
+      "packer_run_uuid": "67068c64-f129-fad7-8c24-3b9720d86f79",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728877881,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0ef45aaaff6f613ec",
+      "packer_run_uuid": "b5e2e8e8-0860-b318-288e-bac5058e1348",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728916650,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0423021190eaa7246",
+      "packer_run_uuid": "6a295a01-e2d6-6b49-968e-6e7ef378d928",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728919257,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0a2f1e9eecd746fbc",
+      "packer_run_uuid": "31a5a414-91a0-eac2-54e6-14783d52af03",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728925901,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0ed75d7611ca41efd",
+      "packer_run_uuid": "672b78b4-6165-f775-bb7a-7be03cb7c34b",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728928627,
+      "files": null,
+      "artifact_id": "us-east-1:ami-05794b41fe65a25d1",
+      "packer_run_uuid": "0b9cc1a2-1a06-b791-5600-4bca18165395",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728933496,
+      "files": null,
+      "artifact_id": "us-east-1:ami-033141ad3034a42c3",
+      "packer_run_uuid": "4ac89d23-3cb2-ecfb-e515-3a0b58591a02",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728938220,
+      "files": null,
+      "artifact_id": "us-east-1:ami-0809df7883ba1f507",
+      "packer_run_uuid": "a5b2cd1e-570c-262e-49b9-227282d0f970",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728941593,
+      "files": null,
+      "artifact_id": "us-east-1:ami-09ab4cd8be9b8e72f",
+      "packer_run_uuid": "10d08ca5-5494-a8af-dafd-7666b7ab677c",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728942531,
+      "files": null,
+      "artifact_id": "us-east-1:ami-06d6b3dd00df17040",
+      "packer_run_uuid": "30ddcfc1-61ed-4785-6ae1-63b470c07e5d",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728943737,
+      "files": null,
+      "artifact_id": "us-east-1:ami-036fae08fcf90b6e0",
+      "packer_run_uuid": "8a567c08-365f-38ee-04b6-08608bf5d220",
+      "custom_data": null
+    },
+    {
+      "name": "my-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1728998444,
+      "files": null,
+      "artifact_id": "us-east-1:ami-066f0fa2f9ec1a978",
+      "packer_run_uuid": "ca3b7eb9-32fd-061f-3a2b-8d626afae646",
+      "custom_data": null
     }
   ],
-  "last_run_uuid": "89a03ba4-48d9-e1d4-76cb-ca3c412ba4d0"
+  "last_run_uuid": "ca3b7eb9-32fd-061f-3a2b-8d626afae646"
 }
