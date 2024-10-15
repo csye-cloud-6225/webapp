@@ -73,7 +73,7 @@ build {
     source      = "../webapp.zip"
     destination = "/tmp/webapp.zip"
   }
-   # Add this new shell provisioner
+  # Add this new shell provisioner
   provisioner "shell" {
     inline = [
       "echo 'DB_PASSWORD=${var.db_password}' >> /tmp/env_vars",
