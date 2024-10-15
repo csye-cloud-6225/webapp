@@ -11,6 +11,15 @@ variable "MY_APP_SERVICE_CONTENT" {
   type    = string
   default = ""
 }
+variable "Password" {
+  type    = string
+  default = ""
+}
+
+variable "DB_NAME" {
+  type    = string
+  default = ""
+}
 variable "aws_region" {
   type    = string
   default = "us-east-1"
@@ -63,6 +72,13 @@ build {
   provisioner "file" {
     source      = "../webapp.zip"
     destination = "/tmp/webapp.zip"
+  }
+   # Add this new shell provisioner
+  provisioner "shell" {
+    inline = [
+      "echo 'DB_PASSWORD=${var.db_password}' >> /tmp/env_vars",
+      "echo 'DB_NAME=${var.db_name}' >> /tmp/env_vars"
+    ]
   }
 
   provisioner "shell" {
