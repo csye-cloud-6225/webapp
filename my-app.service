@@ -1,0 +1,16 @@
+[Unit]
+Description=My Web Application Service
+After=network.target mysql.service
+
+[Service]
+User=csye6225
+Group=csye6225
+WorkingDirectory=/opt/webapp
+ExecStart=/usr/bin/node /opt/webapp/webapp/index.js
+Restart=always
+EnvironmentFile=/opt/webapp/webapp/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
