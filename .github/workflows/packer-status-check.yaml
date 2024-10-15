@@ -38,4 +38,4 @@ jobs:
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
           -e MY_APP_SERVICE_CONTENT \
           -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
-          -var "my_app_service_content=$MY_APP_SERVICE_CONTENT" test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
+          -var "MY_APP_SERVICE_CONTENT=${MY_APP_SERVICE_CONTENT}" test.pkr.hcl || { echo "Packer validate failed"; exit 1; }

@@ -7,7 +7,10 @@ packer {
     }
   }
 }
-
+variable "MY_APP_SERVICE_CONTENT" {
+  type    = string
+  default = ""
+}
 variable "aws_region" {
   type    = string
   default = "us-east-1"
@@ -64,7 +67,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo '${secrets.my_app_service_content}' > /tmp/my-app.service"
+      "echo '${secrets.MY_APP_SERVICE_CONTENT}' > /tmp/my-app.service"
     ]
   }
 
