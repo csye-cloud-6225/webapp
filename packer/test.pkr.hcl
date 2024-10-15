@@ -62,9 +62,10 @@ build {
     destination = "/tmp/webapp.zip"
   }
 
-  provisioner "file" {
-    source      = "../my-app.service"
-    destination = "/tmp/my-app.service"
+  provisioner "shell" {
+    inline = [
+      "echo '${var.my_app_service_content}' > /tmp/my-app.service"
+    ]
   }
 
   provisioner "file" {
