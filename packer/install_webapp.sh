@@ -9,13 +9,6 @@ sudo apt-get install -y nodejs npm unzip mysql-server
 
 # Step 2: Configure MySQL server
 echo "Configuring MySQL server..."
-sudo mysql_secure_installation <<EOF
-n
-y
-y
-y
-y
-EOF
 
 # Enable and start MySQL service
 echo "Starting MySQL service..."
@@ -24,11 +17,9 @@ sudo systemctl start mysql
 
 # Set up MySQL database and user
 echo "Setting up MySQL database..."
-sudo mysql -u root <<EOF
-CREATE DATABASE ${DB_NAME};
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${Password}';
-FLUSH PRIVILEGES;
-EOF
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${Password}';"
+sudo mysql -e "FLUSH PRIVILEGES;"
+sudo mysql -u root -p${Password} -e "CREATE DATABASE ${DB_NAME};"
 
 echo "MySQL security configuration completed."
 
