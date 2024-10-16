@@ -1,46 +1,66 @@
-name: CI/CD Pipeline
+name: Packer Build
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  push:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
-    if: github.event.pull_request.merged == true
+  packer-build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Create webapp.zip
+        run: |
+          mkdir -p packer-template
+          zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
+          mv webapp.zip packer-template/
 
-    - name: Install dependencies
-      run: npm install
+      - name: Move necessary files to packer-template
+        run: |
+          mv my-app.service packer-template/
+          mv packer/install_webapp.sh packer-template/
+          mv packer/test.pkr.hcl packer-template/
 
-    - name: Build application artifact
-      run: zip -r webapp.zip . -x ".*" -x "__MACOSX" -x "node_modules/*"
+      - name: List packer-template contents
+        run: ls -la packer-template
 
-    - name: Set up Packer
-      uses: hashicorp/setup-packer@main
-      with:
-        version: '1.7.8'  # or whichever version you prefer
+      - name: Check necessary files
+        run: |
+          for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
+            if [ ! -f "packer-template/$file" ]; then
+              echo "$file not found in packer-template directory"
+              exit 1
+            fi
+          done
 
-    - name: Build AMI
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        DB_PASSWORD: ${{ secrets.Password }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-      run: |
-        packer build \
-          -var "Password=${Password}" \
-          -var "DB_NAME=${DB_NAME}" \
-          packer/test.pkr.hcl
+      - name: Run Packer Build
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DB_PASSWORD: ${{ secrets.Password }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          echo "Running Packer Build..."
+          docker run --rm -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/packer-template \
+            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e Password -e DB_NAME \
+            -v packer_plugins:/root/.config/packer/plugins \
+            hashicorp/packer:latest build \
+            -var "Password=${Password}" \
+            -var "DB_NAME=${DB_NAME}" \
+            test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 
-    - name: Clean up
-      run: rm webapp.zip
+      - name: Extract AMI ID
+        run: |
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer-template/manifest.json | cut -d ":" -f2)
+          echo "Built AMI ID: $AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+
+      - name: Output AMI ID
+        run: echo "Built AMI ID ${{ env.AMI_ID }}"
