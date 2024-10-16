@@ -35,10 +35,13 @@ jobs:
           ls -la
           echo "packer-template directory contents:"
           ls -la packer-template
+          echo "packer directory contents:"
+          ls -la packer
 
       - name: Check necessary files
         run: |
-          for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
+          REQUIRED_FILES=(webapp.zip my-app.service install_webapp.sh)
+          for file in "${REQUIRED_FILES[@]}"; do
             if [ ! -f "packer-template/$file" ]; then
               echo "$file not found in packer-template directory"
               echo "Current directory structure:"
@@ -46,6 +49,14 @@ jobs:
               exit 1
             fi
           done
+
+          # Check for test.pkr.hcl in the packer directory
+          if [ ! -f "packer/test.pkr.hcl" ]; then
+            echo "test.pkr.hcl not found in packer directory"
+            echo "Current directory structure:"
+            find . -type f
+            exit 1
+          fi
 
       - name: Upload webapp.zip as artifact
         if: ${{ success() }}
