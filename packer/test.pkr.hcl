@@ -8,24 +8,24 @@ packer {
   }
 }
 
-variable "PASSWORD" {
+variable "db_password" {
   type    = string
   default = ""
 }
 
-variable "DB_NAME" {
+variable "db_name" {
   type    = string
   default = ""
 }
-variable "DB_USER" {
+variable "db_user" {
   type    = string
   default = ""
 }
-variable "DB_PORT" {
+variable "db_port" {
   type    = string
   default = ""
 }
-variable "DB_HOST" {
+variable "db_host" {
   type    = string
   default = ""
 }
@@ -115,11 +115,11 @@ build {
 
   provisioner "shell" {
     environment_vars = [
-      "PASSWORD=${var.PASSWORD}",
-      "DB_NAME=${var.DB_NAME}",
-      "DB_HOST=${var.DB_HOST}",
-      "DB_USER=${var.DB_USER}",
-      "DB_PORT=${var.DB_PORT}"
+      "PASSWORD=${var.db_password}",
+      "DB_NAME=${var.db_name}",
+      "DB_HOST=${var.db_host}",
+      "DB_USER=${var.db_user}",
+      "DB_PORT=${var.db_port}"
     ]
     inline = [
       "echo 'Listing contents of /tmp before moving webapp.zip:'",
@@ -133,14 +133,6 @@ build {
       "chmod +x /tmp/install_webapp.sh",
       "echo 'Running install_webapp.sh'",
       "sudo -E /tmp/install_webapp.sh",
-      "echo 'Adding environment variables to /etc/environment'",
-      "echo 'DB_HOST=${var.DB_HOST}' | sudo tee -a /etc/environment",
-      "echo 'DB_USER=${var.DB_USER}' | sudo tee -a /etc/environment",
-      "echo 'DB_PASSWORD=${var.PASSWORD}' | sudo tee -a /etc/environment",
-      "echo 'DB_NAME=${var.DB_NAME}' | sudo tee -a /etc/environment",
-      "echo 'DB_PORT=${var.DB_PORT}' | sudo tee -a /etc/environment",
-      "echo 'Contents of /etc/environment:'",
-      "cat /etc/environment"
     ]
   }
 }
