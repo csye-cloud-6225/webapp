@@ -21,6 +21,12 @@ jobs:
           zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
           mv webapp.zip packer-template/
 
+      - name: Write my-app.service from secret
+        env:
+          MY_APP_SERVICE_CONTENT: ${{ secrets.MY_APP_SERVICE_CONTENT }}
+        run: |
+          echo "${MY_APP_SERVICE_CONTENT}" | base64 -d > packer-template/my-app.service
+
       - name: List repository contents
         run: |
           echo "Root directory contents:"
@@ -61,13 +67,13 @@ jobs:
       - name: Run Packer Validate
         env:
           MY_APP_SERVICE_CONTENT: ${{ secrets.MY_APP_SERVICE_CONTENT }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           docker run --rm -v "${{ github.workspace }}:/workspace" \
             -w /workspace/packer-template -e MY_APP_SERVICE_CONTENT -e DB_PASSWORD -e DB_NAME \
             -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
             -var "MY_APP_SERVICE_CONTENT=${MY_APP_SERVICE_CONTENT}" \
-            -var "Password=${DB_PASSWORD}" \
+            -var "Password=${Password}" \
             -var "DB_NAME=${DB_NAME}" \
             test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
