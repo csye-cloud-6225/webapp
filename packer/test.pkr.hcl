@@ -97,8 +97,6 @@ build {
     inline = [
       "echo 'Listing contents of /tmp:'",
       "ls -la /tmp",
-      "sudo mv /tmp/webapp.zip /opt/webapp.zip",
-      "sudo chmod 644 /opt/webapp.zip",
       "echo 'Moving my-app.service to /etc/systemd/system/'",
       "sudo mv /tmp/my-app.service /etc/systemd/system/",
       "sudo chown root:root /etc/systemd/system/my-app.service",
@@ -117,6 +115,8 @@ build {
       "DB_PORT=${var.PORT}"
     ]
     inline = [
+      "echo 'Listing contents of /tmp before moving webapp.zip:'",
+      "ls -la /tmp",
       "echo 'Moving webapp.zip to /opt/'",
       "sudo mv /tmp/webapp.zip /opt/webapp.zip",
       "sudo chmod 644 /opt/webapp.zip",
