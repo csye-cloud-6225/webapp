@@ -45,7 +45,7 @@ jobs:
           docker run --rm -v "${{ github.workspace }}:/workspace" \
             -w /workspace/packer-template \
             -v packer_plugins:/root/.config/packer/plugins \
-            hashicorp/packer:latest init test.pkr.hcl
+            hashicorp/packer:1.11.2 init test.pkr.hcl
 
       - name: Run Packer Build
         env:
