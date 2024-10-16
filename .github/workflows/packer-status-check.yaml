@@ -69,9 +69,12 @@ jobs:
       - name: List Packer Template Directory After Init
         run: |
           echo "Contents of packer-template directory after init:"
-          docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template \
-            hashicorp/packer:latest /bin/bash -c "ls -la"
+          # docker run --rm -v "${{ github.workspace }}:/workspace" \
+          #   -w /workspace/packer-template \
+          #   hashicorp/packer:latest /bin/bash -c "ls -la"
+          ls -la
+          echo "packer-template directory contents:"
+          la -la packer-template
 
       - name: Run Packer Format Check
         run: |
