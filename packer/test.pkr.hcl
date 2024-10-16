@@ -7,16 +7,17 @@ packer {
     }
   }
 }
-variable "MY_APP_SERVICE_CONTENT" {
-  type    = string
-  default = ""
-}
 variable "Password" {
   type    = string
   default = ""
 }
 
 variable "DB_NAME" {
+  type    = string
+  default = ""
+}
+
+variable "MY_APP_SERVICE_CONTENT" {
   type    = string
   default = ""
 }
@@ -73,18 +74,17 @@ build {
     source      = "../webapp.zip"
     destination = "/tmp/webapp.zip"
   }
-  # Add this new shell provisioner
   provisioner "shell" {
-    inline = [
-      "echo 'Password=${var.Password}' >> /tmp/env_vars",
-      "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
-    ]
-  }
+  inline = [
+    "echo '${var.MY_APP_SERVICE_CONTENT}' > /tmp/my-app.service",
+    "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
+    "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
+  ]
+}
 
-  provisioner "shell" {
-    inline = [
-      "echo '${secrets.MY_APP_SERVICE_CONTENT}' > /tmp/my-app.service"
-    ]
+  provisioner "file" {
+    source      = "../my-app.service"
+    destination = "/tmp/my-app.service"
   }
 
   provisioner "file" {

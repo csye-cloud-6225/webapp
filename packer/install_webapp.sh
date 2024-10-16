@@ -25,8 +25,8 @@ sudo systemctl start mysql
 # Log in to MySQL and set up the database
 echo "Setting up MySQL database..."
 
-sudo mysql -u root -p${secrets.Password} <<EOF
-CREATE DATABASE ${secrets.DB_NAME};
+sudo mysql -u root -p${secrets.Password}.coM001 <<EOF
+CREATE DATABASE ${secrets.DB_Name};
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${secrets.Password}';
 FLUSH PRIVILEGES;
 EOF
