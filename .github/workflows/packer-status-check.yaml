@@ -80,8 +80,8 @@ jobs:
         run: |
           echo "Running Packer Validate..."
           docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace -e Password -e DB_NAME \
+            -w /workspace/packer-template -e Password -e DB_NAME \
             -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
             -var "Password=${Password}" \
             -var "DB_NAME=${DB_NAME}" \
-            packer/test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
+            test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
