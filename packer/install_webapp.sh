@@ -64,8 +64,8 @@ sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 
 # Step 8: Copy and enable the systemd service file
 log_message "Copying systemd service file and enabling the service..."
-if [ -f /tmp/my-app.service ]; then
-    sudo cp /tmp/my-app.service /etc/systemd/system/
+if [ -f /tmp/webapp/my-app.service ]; then
+    sudo cp /tmp/webapp/my-app.service /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl enable my-app.service
 else
