@@ -79,13 +79,26 @@ else
     exit 1
 fi
 
+# # Step 9: Start the application service
+# log_message "Starting the application service..."
+# sudo systemctl start my-app.service
+# log_message "Service status:"
+# systemctl status my-app.service --no-pager
+
+# log_message "Journal logs for the service:"
+# journalctl -xeu my-app.service --no-pager
+# # Verify the service status
+# log_message "Setup complete! Verifying service status..."
+# sudo systemctl status my-app.service --no-pager
 # Step 9: Start the application service
 log_message "Starting the application service..."
-sudo systemctl start my-app.service
-
-# Verify the service status
-log_message "Setup complete! Verifying service status..."
-sudo systemctl status my-app.service --no-pager
+sudo systemctl start my-app.service || {
+    log_message "Failed to start my-app.service. Checking logs..."
+    journalctl -xeu my-app.service --no-pager
+    log_message "Checking service configuration..."
+    systemctl cat my-app.service
+    exit 1
+}
 
 # Log completion message
 log_message "Web application setup complete!"
