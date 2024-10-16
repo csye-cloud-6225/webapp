@@ -26,6 +26,7 @@ jobs:
 
       - name: Create webapp.zip
         run: |
+          mkdir -p packer-template
           zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
           mv webapp.zip packer-template/
 
