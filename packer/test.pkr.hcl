@@ -136,7 +136,7 @@ build {
       "echo 'Adding environment variables to /etc/environment'",
       "echo 'DB_HOST=${var.DB_HOST}' | sudo tee -a /etc/environment",
       "echo 'DB_USER=${var.DB_USER}' | sudo tee -a /etc/environment",
-      "echo 'DB_PASSWORD=${var.Password}' | sudo tee -a /etc/environment",
+      "echo 'DB_PASSWORD=${var.PASSWORD}' | sudo tee -a /etc/environment",
       "echo 'DB_NAME=${var.DB_NAME}' | sudo tee -a /etc/environment",
       "echo 'DB_PORT=${var.DB_PORT}' | sudo tee -a /etc/environment",
       "echo 'Contents of /etc/environment:'",
