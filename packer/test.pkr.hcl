@@ -66,24 +66,24 @@ build {
   sources = ["source.amazon-ebs.my-ami"]
 
   provisioner "file" {
-    source      = "webapp.zip"  # Reference the ZIP file
+    source      = "webapp.zip" # Reference the ZIP file
     destination = "/tmp/webapp.zip"
   }
-  
+
   provisioner "shell" {
     inline = [
       "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
       "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
     ]
   }
-  
+
   provisioner "file" {
-    source      = "my-app.service"  # Directly reference this file
+    source      = "my-app.service" # Directly reference this file
     destination = "/etc/systemd/system/my-app.service"
   }
 
   provisioner "file" {
-    source      = "packer/install_webapp.sh"  # Reference the script from the packer directory
+    source      = "packer/install_webapp.sh" # Reference the script from the packer directory
     destination = "/tmp/install_webapp.sh"
   }
 
