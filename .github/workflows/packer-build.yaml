@@ -24,8 +24,7 @@ jobs:
 
     - name: Build application artifact
       run: |
-        npm run build
-        zip -r webapp.zip .
+         run: zip -r webapp.zip . -x ".*" -x "__MACOSX" -x "node_modules/*"
 
     - name: Set up Packer
       uses: hashicorp/setup-packer@main
