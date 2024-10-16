@@ -30,6 +30,12 @@ jobs:
           zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
           mv webapp.zip packer-template/
 
+      - name: Move necessary files to packer-template
+        run: |
+          mv my-app.service packer-template/
+          mv packer/install_webapp.sh packer-template/
+          mv packer/test.pkr.hcl packer-template/
+
       - name: List repository contents
         run: |
           echo "Root directory contents:"
@@ -39,7 +45,7 @@ jobs:
 
       - name: Check necessary files
         run: |
-          for file in webapp.zip my-app.service install_webapp.sh; do
+          for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
             if [ ! -f "packer-template/$file" ]; then
               echo "$file not found in packer-template directory"
               echo "Current directory structure:"
@@ -59,7 +65,7 @@ jobs:
           EOF
 
       - name: Initialize Packer
-        run: packer init ./packer-template/ubuntu-mysql.pkr.hcl
+        run: packer init ./packer-template/test.pkr.hcl
 
       - name: Validate Packer Template
         run: |
