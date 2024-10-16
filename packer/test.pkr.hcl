@@ -17,15 +17,11 @@ variable "DB_NAME" {
   type    = string
   default = ""
 }
-variable "USER" {
+variable "DB_USER" {
   type    = string
   default = ""
 }
 variable "DB_PORT" {
-  type    = string
-  default = ""
-}
-variable "DB_USER" {
   type    = string
   default = ""
 }
@@ -123,7 +119,7 @@ build {
       "DB_NAME=${var.DB_NAME}",
       "DB_HOST=${var.DB_HOST}",
       "DB_USER=${var.DB_USER}",
-      "DB_PORT=${var.PORT}"
+      "DB_PORT=${var.DB_PORT}"
     ]
     inline = [
       "echo 'Listing contents of /tmp before moving webapp.zip:'",
@@ -139,10 +135,10 @@ build {
       "sudo -E /tmp/install_webapp.sh",
       "echo 'Adding environment variables to /etc/environment'",
       "echo 'DB_HOST=${var.DB_HOST}' | sudo tee -a /etc/environment",
-      "echo 'DB_USER=${var.USER}' | sudo tee -a /etc/environment",
+      "echo 'DB_USER=${var.DB_USER}' | sudo tee -a /etc/environment",
       "echo 'DB_PASSWORD=${var.Password}' | sudo tee -a /etc/environment",
       "echo 'DB_NAME=${var.DB_NAME}' | sudo tee -a /etc/environment",
-      "echo 'DB_PORT=${var.PORT}' | sudo tee -a /etc/environment",
+      "echo 'DB_PORT=${var.DB_PORT}' | sudo tee -a /etc/environment",
       "echo 'Contents of /etc/environment:'",
       "cat /etc/environment"
     ]
