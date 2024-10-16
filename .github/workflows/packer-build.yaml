@@ -71,10 +71,10 @@ jobs:
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
             -v packer_plugins:/root/.config/packer/plugins \
             hashicorp/packer:latest build \
-            -var "Password=${DB_PASSWORD}" \
+            -var "Password=${PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
             -var "DB_USER=${DB_USER}" \
-            -var "DB_PORT=${DB_PORT}"
+            -var "DB_PORT=${DB_PORT}" \
             -var "DB_HOST=${DB_HOST}" \
             test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 

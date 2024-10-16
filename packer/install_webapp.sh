@@ -22,9 +22,9 @@ sudo systemctl start mysql
 
 # Set up MySQL database and user
 log_message "Setting up MySQL database..."
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${Password}';"
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';"
 sudo mysql -e "FLUSH PRIVILEGES;"
-sudo mysql -u root -p${Password} -e "CREATE DATABASE ${DB_NAME};"
+sudo mysql -u root -p${PASSWORD} -e "CREATE DATABASE ${DB_NAME};"
 
 log_message "MySQL security configuration completed."
 
@@ -94,16 +94,16 @@ fi
 # Create and populate .env file
 log_message "Creating and populating .env file..."
 cat << EOF | sudo tee /opt/webapp/.env
-DB_HOST=${secretsDB_HOST}
-DB_USER=${secrets.USER}
-DB_PASSWORD=${secrets.Password}
-DB_NAME=${secrets.DB_NAME}
-DB_PORT=${secrets.DB_PORT}
+DB_HOST=${DB_HOST}
+DB_USER=${DB_USER}
+DB_PASSWORD=${PASSWORD}
+DB_NAME=${DB_NAME}
+DB_PORT=${DB_PORT}
 EOF
 
 # Set correct permissions
 chmod 600 /opt/webapp/.env
-chown webapp:webapp /opt/webapp/.env
+chown csye6225:csye6225 /opt/webapp/.env
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
