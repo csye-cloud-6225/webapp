@@ -21,7 +21,7 @@ variable "USER" {
   type    = string
   default = ""
 }
-variable "DB_PORT" {
+variable "PORT" {
   type    = string
   default = ""
 }
@@ -95,30 +95,45 @@ build {
 
   provisioner "shell" {
     inline = [
-      "ls -la /tmp", // Add this line to check the contents of /tmp
+      "echo 'Listing contents of /tmp:'",
+      "ls -la /tmp",
+      "sudo mv /tmp/webapp.zip /opt/webapp.zip",
+      "sudo chmod 644 /opt/webapp.zip",
+      "echo 'Moving my-app.service to /etc/systemd/system/'",
       "sudo mv /tmp/my-app.service /etc/systemd/system/",
       "sudo chown root:root /etc/systemd/system/my-app.service",
-      "sudo chmod 644 /etc/systemd/system/my-app.service"
+      "sudo chmod 644 /etc/systemd/system/my-app.service",
+      "echo 'Listing contents of /etc/systemd/system/'",
+      "ls -la /etc/systemd/system/my-app.service"
     ]
   }
 
   provisioner "shell" {
     environment_vars = [
       "DB_PASSWORD=${var.Password}",
-      "DB_NAME=${var.DB_NAME}"
+      "DB_NAME=${var.DB_NAME}",
+      "DB_HOST=${var.DB_HOST}",
+      "DB_USER=${var.USER}",
+      "DB_PORT=${var.PORT}"
     ]
     inline = [
+      "echo 'Moving webapp.zip to /opt/'",
       "sudo mv /tmp/webapp.zip /opt/webapp.zip",
       "sudo chmod 644 /opt/webapp.zip",
-      "sudo mv /tmp/my-app.service /opt/my-app.service",
-      "sudo chmod 644 /opt/my-app.service",
+      "echo 'Listing contents of /opt/'",
+      "ls -la /opt/webapp.zip",
+      "echo 'Making install_webapp.sh executable'",
       "chmod +x /tmp/install_webapp.sh",
-      "sudo /tmp/install_webapp.sh",
+      "echo 'Running install_webapp.sh'",
+      "sudo -E /tmp/install_webapp.sh",
+      "echo 'Adding environment variables to /etc/environment'",
       "echo 'DB_HOST=${var.DB_HOST}' | sudo tee -a /etc/environment",
       "echo 'DB_USER=${var.USER}' | sudo tee -a /etc/environment",
       "echo 'DB_PASSWORD=${var.Password}' | sudo tee -a /etc/environment",
       "echo 'DB_NAME=${var.DB_NAME}' | sudo tee -a /etc/environment",
-      "echo 'DB_PORT=${var.DB_PORT}' | sudo tee -a /etc/environment",
+      "echo 'DB_PORT=${var.PORT}' | sudo tee -a /etc/environment",
+      "echo 'Contents of /etc/environment:'",
+      "cat /etc/environment"
     ]
   }
 }
