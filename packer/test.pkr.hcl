@@ -115,7 +115,7 @@ build {
 
   provisioner "shell" {
     environment_vars = [
-      "DB_PASSWORD=${var.Password}",
+      "PASSWORD=${var.PASSWORD}",
       "DB_NAME=${var.DB_NAME}",
       "DB_HOST=${var.DB_HOST}",
       "DB_USER=${var.DB_USER}",
