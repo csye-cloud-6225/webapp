@@ -80,6 +80,15 @@ build {
       "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
     ]
   }
+  provisioner "file" {
+  source      = "webapp.zip"
+  destination = "/app/webapp.zip"
+}
+
+  provisioner "file" {
+    source      = "my-app.service"
+    destination = "/etc/systemd/system/my-app.service"
+  }
 
   provisioner "file" {
     source      = "../my-app.service"
