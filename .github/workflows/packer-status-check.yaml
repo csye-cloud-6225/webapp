@@ -13,22 +13,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # This ensures all history is fetched
+          fetch-depth: 0
 
-      - name: Create repository archive
+      - name: Create webapp.zip
         run: |
-          zip -r webapp.zip . -x '*.git*'
-          mkdir -p packer
-          mv webapp.zip packer/
+          zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
+          mv webapp.zip packer-template/
+
+      - name: List repository contents
+        run: |
+          echo "Root directory contents:"
+          ls -la
+          echo "packer-template directory contents:"
+          ls -la packer-template
+
+      - name: Check necessary files
+        run: |
+          for file in webapp.zip my-app.service install_webapp.sh; do
+            if [ ! -f "packer-template/$file" ]; then
+              echo "$file not found in packer-template directory"
+              echo "Current directory structure:"
+              find . -type f
+              exit 1
+            fi
+          done
+
+      - name: Upload webapp.zip as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: webapp-artifact
+          path: packer-template/webapp.zip
 
       - name: Run Packer Init
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer-template \
           -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest init test.pkr.hcl || { echo "Packer init failed"; exit 1; }
 
       - name: Run Packer Format Check
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer-template \
           hashicorp/packer:latest fmt -check test.pkr.hcl || { echo "Packer format check failed"; exit 1; }
 
       - name: Run Packer Validate
@@ -37,7 +60,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer-template \
           -e MY_APP_SERVICE_CONTENT -e Password -e DB_NAME \
           -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
           -var "MY_APP_SERVICE_CONTENT=${MY_APP_SERVICE_CONTENT}" \

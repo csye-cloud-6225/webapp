@@ -2,12 +2,12 @@
 
 set -e  # Exit on any error
 
+# Step 1: Update packages and install dependencies
 echo "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip mysql-server
 
-echo "Step 2: Configuring MySQL server..."
-# Set up MySQL for the first time
+# Step 2: Configure MySQL server
 echo "Configuring MySQL server..."
 sudo mysql_secure_installation <<EOF
 n
@@ -22,38 +22,37 @@ echo "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
-# Log in to MySQL and set up the database
+# Set up MySQL database and user
 echo "Setting up MySQL database..."
-
 sudo mysql -u root -p${secrets.Password}.coM001 <<EOF
 CREATE DATABASE ${secrets.DB_Name};
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${secrets.Password}';
 FLUSH PRIVILEGES;
 EOF
 
-# Secure MySQL installation
-# sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';"
-# Function to run mysql_secure_installation
 echo "MySQL security configuration completed."
 
-
-
-# Ensure the /opt/webapp directory exists
-echo "Unzipping webapp.zip to /opt/webapp..."
-sudo mkdir -p /opt/webapp
-if [ -f /tmp/webapp.zip ]; then
-    sudo unzip /tmp/webapp.zip -d /opt/webapp
+# Step 3: Zip the webapp folder if it exists
+echo "Checking for webapp folder and creating zip..."
+if [ -d "../webapp" ]; then
+    zip -r /tmp/webapp.zip ../webapp
+    echo "Webapp folder zipped successfully."
 else
-    echo "Error: webapp.zip not found in /tmp!"
+    echo "Error: Webapp folder not found in the expected location!"
     exit 1
 fi
 
-# List contents to verify
+# Step 4: Unzip webapp.zip to /opt/webapp
+echo "Unzipping webapp.zip to /opt/webapp..."
+sudo mkdir -p /opt/webapp
+sudo unzip /tmp/webapp.zip -d /opt/webapp
+
+# List contents to verify the extraction
 echo "Listing files in /opt/webapp..."
 sudo ls -la /opt/webapp
 
-# Navigate to the webapp directory
-cd /opt/webapp/webapp || exit
+# Step 5: Navigate to the webapp directory
+cd /opt/webapp/webapp || exit 1
 
 # Check if package.json exists
 if [ ! -f package.json ]; then
@@ -61,28 +60,33 @@ if [ ! -f package.json ]; then
     exit 1
 fi
 
-echo "Step 5: Creating local system user 'csye6225'..."
+# Step 6: Create a local system user 'csye6225'
+echo "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
-echo "Step 6: Setting ownership of /opt/webapp to csye6225..."
+# Step 7: Set ownership of /opt/webapp to csye6225
+echo "Setting ownership of /opt/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/webapp
 
-echo "Step 7: Installing Node.js dependencies..."
+# Step 8: Install Node.js dependencies
+echo "Installing Node.js dependencies..."
 sudo npm install
 
-# Copy the systemd service file and enable the service
-echo "Step 8: Copying systemd service file and enabling service..."
+# Step 9: Copy and enable the systemd service file
+echo "Copying systemd service file and enabling the service..."
 sudo cp /tmp/my-app.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
 
-echo "Step 9: Starting the application service..."
+# Step 10: Start the application service
+echo "Starting the application service..."
 sudo systemctl start my-app.service
 
+# Verify the service status
 echo "Setup complete! Verifying service status..."
 sudo systemctl status my-app.service --no-pager
 
-# Logging complete
+# Log completion message
 echo "Web application setup complete!"
 
 # Exit script successfully
