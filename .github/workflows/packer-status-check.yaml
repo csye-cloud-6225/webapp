@@ -21,9 +21,17 @@ jobs:
           zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
           mv webapp.zip packer-template/
 
-      - name: Copy my-app.service to packer-template
+      - name: Write my-app.service from secret
+        env:
+          MY_APP_SERVICE_CONTENT: ${{ secrets.MY_APP_SERVICE_CONTENT }}
         run: |
-          cp my-app.service packer-template/my-app.service
+          echo "${MY_APP_SERVICE_CONTENT}" | base64 -d > packer-template/my-app.service
+
+      - name: Create install_webapp.sh
+        run: |
+          echo '#!/bin/bash' > packer-template/install_webapp.sh
+          echo 'echo "Installing web app..."' >> packer-template/install_webapp.sh
+          chmod +x packer-template/install_webapp.sh
 
       - name: List repository contents
         run: |
