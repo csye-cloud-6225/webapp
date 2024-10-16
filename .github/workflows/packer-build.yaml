@@ -1,4 +1,4 @@
-name: Packer Build
+name: Packer AMI Build
 
 on:
   push:
@@ -6,71 +6,105 @@ on:
       - main
 
 jobs:
-  packer-build:
+  build-ami:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          fetch-depth: 0
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "1.9.4"
 
       - name: Create webapp.zip
         run: |
-          mkdir -p packer-template
-          zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
+          zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
           mv webapp.zip packer-template/
-      - name: Verify webapp.zip location
-        run: |
-            ls -la packer-template/webapp.zip
-            file packer-template/webapp.zip
 
-      - name: Verify webapp.zip location
+      - name: List repository contents
         run: |
-          echo "contents of webapp.zip"
-          unzip -l packer-template/webapp.zip
+          echo "Root directory contents:"
+          ls -la
+          echo "packer-template directory contents:"
+          ls -la packer-template
 
-      - name: Move necessary files to packer-template
-        run: |
-          mv my-app.service packer-template/
-          mv packer/install_webapp.sh packer-template/
-          mv packer/test.pkr.hcl packer-template/
-
-      - name: List packer-template contents
-        run: ls -la packer-template
       - name: Check necessary files
         run: |
-          for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
+          for file in webapp.zip my-app.service install_webapp.sh; do
             if [ ! -f "packer-template/$file" ]; then
               echo "$file not found in packer-template directory"
+              echo "Current directory structure:"
+              find . -type f
               exit 1
             fi
           done
 
-      - name: Run Packer Init
+      - name: Create variables file
         run: |
-          echo "Running Packer Init..."
-          docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template \
-            -v packer_plugins:/root/.config/packer/plugins \
-            hashicorp/packer:1.11.2 init test.pkr.hcl
+          cat << EOF > packer-template/variables.pkrvars.hcl
+          aws_region = "us-east-1"
+          instance_type = "t2.small"
+          ssh_username = "ubuntu"
+          source_ami = "ami-0cad6ee50670e3d0ea"
+          subnet_id = "subnet-01559dcd81713aec8"
+          EOF
 
-      - name: Create env file
-        run: |
-          echo 'DB_HOST=${{ secrets.DB_HOST }}' > packer-template/.env
-          echo 'DB_USER=${{ secrets.DB_USER }}' >> packer-template/.env
-          echo 'DB_PASSWORD=${{ secrets.Password }}' >> packer-template/.env
-          echo 'DB_NAME=${{ secrets.DB_NAME }}' >> packer-template/.env
-          echo 'DB_PORT=${{ secrets.DB_PORT }}' >> packer-template/.env
-          
-      - name: Extract AMI ID
-        run: |
-          AMI_ID=$(docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template \
-            hashicorp/packer:latest \
-            jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
-          echo "Built AMI ID: $AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+      - name: Initialize Packer
+        run: packer init ./packer-template/ubuntu-mysql.pkr.hcl
 
-      - name: Output AMI ID
-        run: echo "Built AMI ID ${{ env.AMI_ID }}"
+      - name: Validate Packer Template
+        run: |
+          cd packer-template
+          packer validate -var-file=variables.pkrvars.hcl \
+            -var "db_host=${{ secrets.DB_HOST }}" \
+            -var "db_user=${{ secrets.DB_USER }}" \
+            -var "db_password=${{ secrets.Password }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_port=${{ secrets.DB_PORT }}" \
+            ubuntu-mysql.pkr.hcl
+
+      - name: Build AMI
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.Password }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+        run: |
+          cd packer-template
+          packer build -debug -var-file=variables.pkrvars.hcl \
+            -var "db_host=$DB_HOST" \
+            -var "db_user=$DB_USER" \
+            -var "db_password=$DB_PASSWORD" \
+            -var "db_name=$DB_NAME" \
+            -var "db_port=$DB_PORT" \
+            ubuntu-mysql.pkr.hcl
+
+      - name: Get AMI ID
+        id: get-ami-id
+        run: |
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer-template/manifest.json | cut -d ":" -f2)
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f packer-template/webapp.zip
+
+      - name: Debug Output
+        if: failure()
+        run: |
+          echo "Packer template contents:"
+          cat packer-template/ubuntu-mysql.pkr.hcl
+          echo "Variables file contents:"
+          cat packer-template/variables.pkrvars.hcl
+          echo "Environment variables (excluding sensitive data):"
+          env | grep -v -e DB_PASSWORD -e AWS
