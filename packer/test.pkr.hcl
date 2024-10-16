@@ -70,13 +70,6 @@ build {
     destination = "/tmp/webapp.zip"
   }
 
-  provisioner "shell" {
-    inline = [
-      "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
-      "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
-    ]
-  }
-
   provisioner "file" {
     source      = "${path.root}/my-app.service"
     destination = "/tmp/my-app.service"
@@ -96,9 +89,13 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = [
+      "DB_PASSWORD=${var.Password}",
+      "DB_NAME=${var.DB_NAME}"
+    ]
     inline = [
       "chmod +x /tmp/install_webapp.sh",
-      "sudo /tmp/install_webapp.sh"
+      "sudo -E /tmp/install_webapp.sh"
     ]
   }
 }

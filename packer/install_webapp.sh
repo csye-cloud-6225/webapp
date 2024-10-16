@@ -24,26 +24,15 @@ sudo systemctl start mysql
 
 # Set up MySQL database and user
 echo "Setting up MySQL database..."
-sudo mysql -u root -p${secrets.Password} <<EOF
-CREATE DATABASE ${secrets.DB_Name};
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${secrets.Password}';
+sudo mysql -u root <<EOF
+CREATE DATABASE ${DB_NAME};
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${Password}';
 FLUSH PRIVILEGES;
 EOF
 
 echo "MySQL security configuration completed."
-# Step 1: Create the packer-template directory if it doesn't exist
-mkdir -p packer-template
-# Step 3: Zip the webapp folder if it exists
-echo "Checking for webapp folder and creating zip..."
-if [ -d "../webapp" ]; then
-    zip -r /tmp/webapp.zip ../webapp
-    echo "Webapp folder zipped successfully."
-else
-    echo "Error: Webapp folder not found in the expected location!"
-    exit 1
-fi
 
-# Step 4: Unzip webapp.zip to /opt/webapp
+# Step 3: Unzip webapp.zip to /opt/webapp
 echo "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
 sudo unzip /tmp/webapp.zip -d /opt/webapp
@@ -52,8 +41,8 @@ sudo unzip /tmp/webapp.zip -d /opt/webapp
 echo "Listing files in /opt/webapp..."
 sudo ls -la /opt/webapp
 
-# Step 5: Navigate to the webapp directory
-cd /opt/webapp/webapp || exit 1
+# Step 4: Navigate to the webapp directory
+cd /opt/webapp || exit 1
 
 # Check if package.json exists
 if [ ! -f package.json ]; then
@@ -61,25 +50,25 @@ if [ ! -f package.json ]; then
     exit 1
 fi
 
-# Step 6: Create a local system user 'csye6225'
+# Step 5: Create a local system user 'csye6225'
 echo "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
-# Step 7: Set ownership of /opt/webapp to csye6225
+# Step 6: Set ownership of /opt/webapp to csye6225
 echo "Setting ownership of /opt/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/webapp
 
-# Step 8: Install Node.js dependencies
+# Step 7: Install Node.js dependencies
 echo "Installing Node.js dependencies..."
-sudo npm install
+sudo -u csye6225 npm install
 
-# Step 9: Copy and enable the systemd service file
+# Step 8: Copy and enable the systemd service file
 echo "Copying systemd service file and enabling the service..."
 sudo cp /tmp/my-app.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
 
-# Step 10: Start the application service
+# Step 9: Start the application service
 echo "Starting the application service..."
 sudo systemctl start my-app.service
 
