@@ -20,47 +20,23 @@ log_message "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
-# # Set up MySQL database and user
-# log_message "Setting up MySQL database..."
-# log_message "PASSWORD variable: ${PASSWORD}"  # Debug output
-# log_message "DB_NAME variable: ${DB_NAME}"    # Debug output
-# # Set up MySQL database and user
-# log_message "Setting up MySQL database..."
-# sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';"
-# sudo mysql -e "FLUSH PRIVILEGES;"
-# sudo mysql -u root -p${PASSWORD} -e "CREATE DATABASE ${DB_NAME};"
-
 # Set up MySQL database and user
 log_message "Setting up MySQL database..."
-log_message "PASSWORD variable: ${PASSWORD}"  # Debug output
+log_message "PASSWORD variable: ${DB_PASSWORD}"  # Debug output
 log_message "DB_NAME variable: ${DB_NAME}"    # Debug output
 
+sudo mysql -u root -p'${DB_PASSWORD}' <<EOF
 # Attempt to set root password
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';" || {
-    log_message "Failed to set root password. Error: $?"
-    exit 1
-}
-
-sudo mysql -e "FLUSH PRIVILEGES;" || {
-    log_message "Failed to flush privileges. Error: $?"
-    exit 1
-}
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD}';" 
+FLUSH PRIVILEGES;
 
 # Attempt to create database
-sudo mysql -u root -p"${PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};" || {
-    log_message "Failed to create database. Error: $?"
-    exit 1
-}
+CREATE DATABASE IF NOT EXISTS \${DB_NAME}\;
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON \${DB_NAME}\.* TO '${DB_USER}'@'localhost';
+FLUSH PRIVILEGES;
+EOF
 
-log_message "MySQL security configuration completed."
-
-# Verify database creation
-if sudo mysql -u root -p"${PASSWORD}" -e "SHOW DATABASES LIKE '${DB_NAME}';" | grep "${DB_NAME}"; then
-    log_message "Database ${DB_NAME} created successfully."
-else
-    log_message "Failed to create database ${DB_NAME}."
-    exit 1
-fi
 log_message "MySQL security configuration completed."
 
 log_message "Contents of /tmp before unzipping:"
@@ -113,28 +89,30 @@ else
     log_message "Error: my-app.service file not found in /tmp"
     exit 1
 fi
+# Set environment variables securely
+# Create the directory if it doesn't exist
+sudo mkdir -p /etc/systemd/system/my-app.service.d
 
-# # Step 9: Start the application service
-# log_message "Starting the application service..."
-# sudo systemctl start my-app.service
-# log_message "Service status:"
-# systemctl status my-app.service --no-pager
+# Now proceed to create the override.conf file
+sudo tee /etc/systemd/system/my-app.service.d/override.conf <<EOT
+[Service]
+Environment="DB_HOST=${DB_HOST}"
+Environment="DB_USER=${DB_USER}"
+Environment="DB_PASSWORD=${DB_PASSWORD}"
+Environment="DB_NAME=${DB_NAME}"
+Environment="DB_PORT=${DB_PORT}"
+EOT
 
-# log_message "Journal logs for the service:"
-# journalctl -xeu my-app.service --no-pager
-# # Verify the service status
-# log_message "Setup complete! Verifying service status..."
-# sudo systemctl status my-app.service --no-pager
-# Step 9: Start the application service
-# Create and populate .env file
-log_message "Creating and populating .env file..."
-cat << EOF | sudo tee /opt/webapp/.env
-DB_HOST=${DB_HOST}
-DB_USER=${DB_USER}
-DB_PASSWORD=${PASSWORD}
-DB_NAME=${DB_NAME}
-DB_PORT=${DB_PORT}
-EOF
+# Set up systemd service
+debug_log "Setting up systemd service..."
+sudo cp /opt/my-app.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable my-app.service
+sudo systemctl start my-app.service
+
+# Check service status
+debug_log "Checking my-app service status..."
+sudo systemctl status my-app.service
 
 # Set correct permissions
 chmod 600 /opt/webapp/.env
@@ -147,16 +125,9 @@ cat /opt/webapp/.env
 sudo chown csye6225:csye6225 /opt/webapp/.env
 sudo chmod 600 /opt/webapp/.env
 
-log_message "Contents of .env file:"
-sudo cat /opt/webapp/.env
-log_message "Starting the application service..."
-sudo systemctl start my-app.service || {
-    log_message "Failed to start my-app.service. Checking logs..."
-    journalctl -xeu my-app.service --no-pager
-    log_message "Checking service configuration..."
-    systemctl cat my-app.service
-    exit 1
-}
+# List contents of /opt/webapp
+debug_log "Contents of /opt/webapp:"
+ls -la /opt/webapp
 
 # Log completion message
 log_message "Web application setup complete!"
