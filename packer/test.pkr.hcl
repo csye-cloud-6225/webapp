@@ -17,6 +17,19 @@ variable "DB_NAME" {
   type    = string
   default = ""
 }
+variable "USER" {
+  type    = string
+  default = ""
+}
+variable "DB_PORT" {
+  type    = string
+  default = ""
+}
+
+variable "DB_HOST" {
+  type    = string
+  default = ""
+}
 
 variable "aws_region" {
   type    = string
@@ -95,8 +108,17 @@ build {
       "DB_NAME=${var.DB_NAME}"
     ]
     inline = [
+      "sudo mv /tmp/webapp.zip /opt/webapp.zip",
+      "sudo chmod 644 /opt/webapp.zip",
+      "sudo mv /tmp/my-app.service /opt/my-app.service",
+      "sudo chmod 644 /opt/my-app.service",
       "chmod +x /tmp/install_webapp.sh",
-      "sudo -E /tmp/install_webapp.sh"
+      "sudo /tmp/install_webapp.sh",
+      "echo 'DB_HOST=${var.DB_HOST}' | sudo tee -a /etc/environment",
+      "echo 'DB_USER=${var.USER}' | sudo tee -a /etc/environment",
+      "echo 'DB_PASSWORD=${var.Password}' | sudo tee -a /etc/environment",
+      "echo 'DB_NAME=${var.DB_NAME}' | sudo tee -a /etc/environment",
+      "echo 'DB_PORT=${var.DB_PORT}' | sudo tee -a /etc/environment",
     ]
   }
 }
