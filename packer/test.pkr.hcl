@@ -122,7 +122,7 @@ build {
       "DB_PASSWORD=${var.Password}",
       "DB_NAME=${var.DB_NAME}",
       "DB_HOST=${var.DB_HOST}",
-      "DB_USER=${var.USER}",
+      "DB_USER=${var.DB_USER}",
       "DB_PORT=${var.PORT}"
     ]
     inline = [
