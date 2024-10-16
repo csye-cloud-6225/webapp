@@ -65,18 +65,17 @@ jobs:
           DB_PORT: ${{secrets.DB_PORT}}
           DB_HOST: ${{secrets.DB_HOST}}
         run: |
-          echo "Running Packer Build..."
-          docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template \
-            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
-            -v packer_plugins:/root/.config/packer/plugins \
-            hashicorp/packer:latest build \
-            -var "PASSWORD=${PASSWORD}" \
-            -var "DB_NAME=${DB_NAME}" \
-            -var "DB_USER=${DB_USER}" \
-            -var "DB_PORT=${DB_PORT}" \
-            -var "DB_HOST=${DB_HOST}" \
-            test.pkr.hcl || { echo "Packer build failed"; exit 1; }
+          echo "DB_NAME: $DB_NAME"
+          echo "DB_USER: $DB_USER"
+          echo "DB_PORT: $DB_PORT"
+          echo "DB_HOST: $DB_HOST"
+          echo "PASSWORD: $PASSWORD"  
+          -var "PASSWORD=${PASSWORD}" \ #to pass it to packer template
+          -var "DB_NAME=${DB_NAME}" \
+          -var "DB_USER=${DB_USER}" \
+          -var "DB_PORT=${DB_PORT}" \
+          -var "DB_HOST=${DB_HOST}" \
+          test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 
       - name: Extract AMI ID
         run: |
