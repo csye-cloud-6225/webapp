@@ -21,11 +21,14 @@ variable "USER" {
   type    = string
   default = ""
 }
-variable "PORT" {
+variable "DB_PORT" {
   type    = string
   default = ""
 }
-
+variable "DB_USER" {
+  type    = string
+  default = ""
+}
 variable "DB_HOST" {
   type    = string
   default = ""

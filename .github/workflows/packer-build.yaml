@@ -61,6 +61,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DB_PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{secrets.USER}}
+          DB_PORT: ${{secrets.DB_PORT}}
+          DB_HOST: ${{secrets.DB_HOST}}
         run: |
           echo "Running Packer Build..."
           docker run --rm -v "${{ github.workspace }}:/workspace" \
@@ -70,6 +73,9 @@ jobs:
             hashicorp/packer:latest build \
             -var "Password=${DB_PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
+            -var "DB_USER=${DB_USER}" \
+            -VAR "DB_PORT=${DB_PORT}"
+            -var "DB_HOST=${DB_HOST}" \
             test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 
       - name: Extract AMI ID

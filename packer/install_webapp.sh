@@ -91,6 +91,29 @@ fi
 # log_message "Setup complete! Verifying service status..."
 # sudo systemctl status my-app.service --no-pager
 # Step 9: Start the application service
+# Create and populate .env file
+log_message "Creating and populating .env file..."
+cat << EOF | sudo tee /opt/webapp/.env
+DB_HOST=${secretsDB_HOST}
+DB_USER=${secrets.USER}
+DB_PASSWORD=${secrets.Password}
+DB_NAME=${secrets.DB_NAME}
+DB_PORT=${secrets.DB_PORT}
+EOF
+
+# Set correct permissions
+chmod 600 /opt/webapp/.env
+chown webapp:webapp /opt/webapp/.env
+
+echo "Contents of .env file:"
+cat /opt/webapp/.env
+
+# Set correct ownership and permissions
+sudo chown csye6225:csye6225 /opt/webapp/.env
+sudo chmod 600 /opt/webapp/.env
+
+log_message "Contents of .env file:"
+sudo cat /opt/webapp/.env
 log_message "Starting the application service..."
 sudo systemctl start my-app.service || {
     log_message "Failed to start my-app.service. Checking logs..."
