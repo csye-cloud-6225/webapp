@@ -24,11 +24,12 @@ jobs:
         run: |
             ls -la packer-template/webapp.zip
             file packer-template/webapp.zip
+
       - name: Verify webapp.zip location
         run: |
-          ls -la packer-template/webapp.zip
-          file packer-template/webapp.zip
-          
+          echo "contents of webapp.zip"
+          unzip -l packer-template/webapp.zip
+
       - name: Move necessary files to packer-template
         run: |
           mv my-app.service packer-template/
