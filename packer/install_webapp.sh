@@ -31,7 +31,8 @@ FLUSH PRIVILEGES;
 EOF
 
 echo "MySQL security configuration completed."
-
+# Step 1: Create the packer-template directory if it doesn't exist
+mkdir -p packer-template
 # Step 3: Zip the webapp folder if it exists
 echo "Checking for webapp folder and creating zip..."
 if [ -d "../webapp" ]; then
