@@ -82,6 +82,14 @@ build {
     source      = "${path.root}/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
+  provisioner "shell" {
+    inline = [
+      "ls -la /tmp/webapp.zip",
+      "file /tmp/webapp.zip",
+      "echo 'Contents of /tmp:'",
+      "ls -la /tmp"
+    ]
+  }
 
   provisioner "file" {
     source      = "${path.root}/my-app.service"
