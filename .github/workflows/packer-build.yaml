@@ -76,7 +76,7 @@ jobs:
             -var "db_password=${{ secrets.Password }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
             -var "db_port=${{ secrets.DB_PORT }}" \
-            ubuntu-mysql.pkr.hcl
+            test.pkr.hcl
 
       - name: Build AMI
         env:
@@ -93,7 +93,7 @@ jobs:
             -var "db_password=$DB_PASSWORD" \
             -var "db_name=$DB_NAME" \
             -var "db_port=$DB_PORT" \
-            ubuntu-mysql.pkr.hcl
+            test.pkr.hcl
 
       - name: Get AMI ID
         id: get-ami-id
@@ -110,7 +110,7 @@ jobs:
         if: failure()
         run: |
           echo "Packer template contents:"
-          cat packer-template/ubuntu-mysql.pkr.hcl
+          cat packer-template/test.pkr.hcl
           echo "Variables file contents:"
           cat packer-template/variables.pkrvars.hcl
           echo "Environment variables (excluding sensitive data):"
