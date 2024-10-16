@@ -84,4 +84,4 @@ jobs:
             -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
             -var "Password=${Password}" \
             -var "DB_NAME=${DB_NAME}" \
-            test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
+            packer/test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
