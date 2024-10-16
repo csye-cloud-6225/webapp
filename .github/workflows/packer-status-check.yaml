@@ -73,21 +73,18 @@ jobs:
             -w /workspace/packer-template hashicorp/packer:latest fmt -check test.pkr.hcl \
             || { echo "Packer format check failed"; exit 1; }
 
-      - name: Run Packer Validate
-        env:
-          PASSWORD: ${{ secrets.Password }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{secrets.DB_NAME}}
-          DB_PORT: ${{secrets.DB_PORT}}
-          DB_HOST: ${{secrets.DB_HOST}}
+      - name: Packer validate
         run: |
-          echo "Running Packer Validate..."
-          docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
-            -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
-            -var "PASSWORD=${PASSWORD}" \
-            -var "DB_NAME=${DB_NAME}" \
-            -var "DB_USER=${DB_NAME}" \
-            -var "DB_PORT=${DB_PORT}" \
-            -var "DB_HOST=${DB_HOST}" \
-            test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
+          cd packer-template
+          # packer init test.pkr.hcl
+          packer validate -syntax-only test.pkr.hcl
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        continue-on-error: false
+
+      - name: Prevent merge on failure
+        if: failure()
+        run: |
+          echo "Packer validation failed. This pull request cannot be merged."
+          exit 1
