@@ -21,6 +21,10 @@ jobs:
           zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
           mv webapp.zip packer-template/
 
+      - name: Move my-app.service to packer-template
+        run: |
+          mv my-app.service packer-template/
+
       - name: List repository contents
         run: |
           echo "Root directory contents:"
