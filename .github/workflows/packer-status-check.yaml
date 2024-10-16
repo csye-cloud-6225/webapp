@@ -77,7 +77,7 @@ jobs:
         run: |
           cd packer-template
           # packer init test.pkr.hcl
-          packer validate -syntax-only ubuntu-mysql.pkr.hcl
+          packer validate -syntax-only test.pkr.hcl
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
