@@ -37,7 +37,7 @@ log_message "Attempting to unzip /tmp/webapp.zip..."
 # Step 3: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
-sudo unzip /tmp/webapp.zip -d /opt/webapp
+sudo unzip /opt/webapp.zip -d /opt/webapp
 
 # List contents to verify the extraction
 log_message "Listing files in /opt/webapp..."
