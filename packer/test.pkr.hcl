@@ -18,7 +18,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "ls -la /tmp",  // Add this line to check the contents of /tmp
+      "ls -la /tmp", // Add this line to check the contents of /tmp
       "sudo mv /tmp/my-app.service /etc/systemd/system/",
       "sudo chown root:root /etc/systemd/system/my-app.service",
       "sudo chmod 644 /etc/systemd/system/my-app.service"
