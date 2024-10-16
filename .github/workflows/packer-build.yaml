@@ -20,22 +20,23 @@ jobs:
           mkdir -p packer-template
           zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
           mv webapp.zip packer-template/
-
-      - name: Verify webapp.zip location and content
+      - name: Verify webapp.zip location
+        run: |
+            ls -la packer-template/webapp.zip
+            file packer-template/webapp.zip
+      - name: Verify webapp.zip location
         run: |
           ls -la packer-template/webapp.zip
           file packer-template/webapp.zip
-          unzip -l packer-template/webapp.zip | head -n 20
-
+          
       - name: Move necessary files to packer-template
         run: |
-          mv my-app.service packer-template/ || echo "my-app.service not found"
-          mv packer/install_webapp.sh packer-template/ || echo "install_webapp.sh not found"
-          mv packer/test.pkr.hcl packer-template/ || echo "test.pkr.hcl not found"
+          mv my-app.service packer-template/
+          mv packer/install_webapp.sh packer-template/
+          mv packer/test.pkr.hcl packer-template/
 
       - name: List packer-template contents
         run: ls -la packer-template
-
       - name: Check necessary files
         run: |
           for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
@@ -59,42 +60,25 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DB_PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
-          PACKER_LOG: 1
         run: |
           echo "Running Packer Build..."
-          echo "Current directory: $(pwd)"
-          echo "Contents of packer-template directory:"
-          ls -la packer-template
           docker run --rm -v "${{ github.workspace }}:/workspace" \
             -w /workspace/packer-template \
-            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e Password -e DB_NAME -e PACKER_LOG \
+            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e Password -e DB_NAME \
             -v packer_plugins:/root/.config/packer/plugins \
             hashicorp/packer:latest build \
-            -debug \
             -var "Password=${DB_PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
             test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 
       - name: Extract AMI ID
         run: |
-          if [ -f packer-template/manifest.json ]; then
-            AMI_ID=$(docker run --rm -v "${{ github.workspace }}:/workspace" \
-              -w /workspace/packer-template \
-              hashicorp/packer:latest \
-              jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
-            echo "Built AMI ID: $AMI_ID"
-            echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-          else
-            echo "manifest.json not found. Packer build may have failed."
-            exit 1
-          fi
+          AMI_ID=$(docker run --rm -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/packer-template \
+            hashicorp/packer:latest \
+            jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
+          echo "Built AMI ID: $AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
       - name: Output AMI ID
         run: echo "Built AMI ID ${{ env.AMI_ID }}"
-
-      - name: Upload Packer logs
-        if: failure()
-        uses: actions/upload-artifact@v2
-        with:
-          name: packer-logs
-          path: packer-template/packer.log
