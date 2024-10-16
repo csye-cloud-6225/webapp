@@ -74,7 +74,7 @@ jobs:
             -var "Password=${DB_PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
             -var "DB_USER=${DB_USER}" \
-            -VAR "DB_PORT=${DB_PORT}"
+            -var "DB_PORT=${DB_PORT}"
             -var "DB_HOST=${DB_HOST}" \
             test.pkr.hcl || { echo "Packer build failed"; exit 1; }
 
