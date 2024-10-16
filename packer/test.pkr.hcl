@@ -8,7 +8,7 @@ packer {
   }
 }
 
-variable "Password" {
+variable "PASSWORD" {
   type    = string
   default = ""
 }

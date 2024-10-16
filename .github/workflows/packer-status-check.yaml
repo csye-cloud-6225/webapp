@@ -75,13 +75,19 @@ jobs:
 
       - name: Run Packer Validate
         env:
-          DB_PASSWORD: ${{ secrets.Password }}
+          PASSWORD: ${{ secrets.Password }}
           DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{secrets.DB_NAME}}
+          DB_PORT: ${{secrets.DB_PORT}}
+          DB_HOST: ${{secrets.DB_HOST}}
         run: |
           echo "Running Packer Validate..."
           docker run --rm -v "${{ github.workspace }}:/workspace" \
-            -w /workspace/packer-template -e Password -e DB_NAME \
+            -w /workspace/packer-template -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
             -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate \
-            -var "Password=${Password}" \
+            -var "Password=${PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
+            -var "DB_USER=${DB_NAME}" \
+            -var "DB_PORT=${DB_PORT}" \
+            -var "DB_HOST=${DB_HOST}" \
             test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
