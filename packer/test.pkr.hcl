@@ -82,10 +82,6 @@ build {
     source      = "${path.root}/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
-  provisioner "file" {
-    source      = "../webapp.zip"
-    destination = "/tmp/webapp.zip"
-  }
 
   provisioner "file" {
     source      = "${path.root}/my-app.service"
