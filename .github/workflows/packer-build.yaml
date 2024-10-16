@@ -71,7 +71,7 @@ jobs:
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
             -v packer_plugins:/root/.config/packer/plugins \
             hashicorp/packer:latest build \
-            -var "Password=${PASSWORD}" \
+            -var "PASSWORD=${PASSWORD}" \
             -var "DB_NAME=${DB_NAME}" \
             -var "DB_USER=${DB_USER}" \
             -var "DB_PORT=${DB_PORT}" \
