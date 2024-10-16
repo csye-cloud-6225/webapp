@@ -2,44 +2,39 @@
 
 set -e  # Exit on any error
 
+# Function to log messages
+log_message() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
 # Step 1: Update packages and install dependencies
-echo "Step 1: Updating packages and installing dependencies..."
+log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip mysql-server
 
 # Step 2: Configure MySQL server
-echo "Configuring MySQL server..."
+log_message "Configuring MySQL server..."
 
 # Enable and start MySQL service
-echo "Starting MySQL service..."
+log_message "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
 # Set up MySQL database and user
-echo "Setting up MySQL database..."
+log_message "Setting up MySQL database..."
 sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${Password}';"
 sudo mysql -e "FLUSH PRIVILEGES;"
 sudo mysql -u root -p${Password} -e "CREATE DATABASE ${DB_NAME};"
 
-echo "MySQL security configuration completed."
+log_message "MySQL security configuration completed."
 
 # Step 3: Unzip webapp.zip to /opt/webapp
-echo "Unzipping webapp.zip to /opt/webapp..."
+log_message "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
 sudo unzip /tmp/webapp.zip -d /opt/webapp
 
-# Debug: List contents of /tmp
-log_message "Listing contents of /tmp:"
-ls -la /tmp
-
-# Check if my-app.service exists
-if [ ! -f /tmp/my-app.service ]; then
-    log_message "Error: /tmp/my-app.service does not exist"
-    exit 1
-fi
-
 # List contents to verify the extraction
-echo "Listing files in /opt/webapp..."
+log_message "Listing files in /opt/webapp..."
 sudo ls -la /opt/webapp
 
 # Step 4: Navigate to the webapp directory
@@ -47,12 +42,12 @@ cd /opt/webapp || exit 1
 
 # Check if package.json exists
 if [ ! -f package.json ]; then
-    echo "Error: package.json not found!"
+    log_message "Error: package.json not found!"
     exit 1
 fi
 
 # Step 5: Create a local system user 'csye6225'
-echo "Creating local system user 'csye6225'..."
+log_message "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
 # Ensure csye6225 has the correct permissions for its home directory
@@ -60,29 +55,34 @@ sudo mkdir -p /home/csye6225
 sudo chown -R csye6225:csye6225 /home/csye6225
 
 # Step 6: Set ownership of /opt/webapp to csye6225
-echo "Setting ownership of /opt/webapp to csye6225..."
+log_message "Setting ownership of /opt/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/webapp
 
 # Step 7: Install Node.js dependencies
-echo "Installing Node.js dependencies..."
+log_message "Installing Node.js dependencies..."
 sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 
 # Step 8: Copy and enable the systemd service file
-echo "Copying systemd service file and enabling the service..."
-sudo cp /tmp/my-app.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable my-app.service
+log_message "Copying systemd service file and enabling the service..."
+if [ -f /tmp/my-app.service ]; then
+    sudo cp /tmp/my-app.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable my-app.service
+else
+    log_message "Error: my-app.service file not found in /tmp"
+    exit 1
+fi
 
 # Step 9: Start the application service
-echo "Starting the application service..."
+log_message "Starting the application service..."
 sudo systemctl start my-app.service
 
 # Verify the service status
-echo "Setup complete! Verifying service status..."
+log_message "Setup complete! Verifying service status..."
 sudo systemctl status my-app.service --no-pager
 
 # Log completion message
-echo "Web application setup complete!"
+log_message "Web application setup complete!"
 
 # Exit script successfully
 exit 0
