@@ -75,12 +75,12 @@ build {
     destination = "/tmp/webapp.zip"
   }
   provisioner "shell" {
-  inline = [
-    "echo '${var.MY_APP_SERVICE_CONTENT}' > /tmp/my-app.service",
-    "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
-    "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
-  ]
-}
+    inline = [
+      "echo '${var.MY_APP_SERVICE_CONTENT}' > /tmp/my-app.service",
+      "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
+      "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
+    ]
+  }
 
   provisioner "file" {
     source      = "../my-app.service"
