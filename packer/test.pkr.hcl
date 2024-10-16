@@ -66,7 +66,7 @@ build {
   sources = ["source.amazon-ebs.my-ami"]
 
   provisioner "file" {
-    source      = "${path.root}/webapp.zip" # Reference the ZIP file
+    source      = "${path.root}/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
 
@@ -78,12 +78,20 @@ build {
   }
 
   provisioner "file" {
-    source      = "${path.root}/my-app.service" # Directly reference this file
-    destination = "/etc/systemd/system/my-app.service"
+    source      = "${path.root}/my-app.service"
+    destination = "/tmp/my-app.service"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo mv /tmp/my-app.service /etc/systemd/system/",
+      "sudo chown root:root /etc/systemd/system/my-app.service",
+      "sudo chmod 644 /etc/systemd/system/my-app.service"
+    ]
   }
 
   provisioner "file" {
-    source      = "${path.root}/install_webapp.sh" # Reference the script from the packer directory
+    source      = "${path.root}/install_webapp.sh"
     destination = "/tmp/install_webapp.sh"
   }
 
