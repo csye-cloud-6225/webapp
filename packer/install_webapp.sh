@@ -20,12 +20,47 @@ log_message "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
+# # Set up MySQL database and user
+# log_message "Setting up MySQL database..."
+# log_message "PASSWORD variable: ${PASSWORD}"  # Debug output
+# log_message "DB_NAME variable: ${DB_NAME}"    # Debug output
+# # Set up MySQL database and user
+# log_message "Setting up MySQL database..."
+# sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';"
+# sudo mysql -e "FLUSH PRIVILEGES;"
+# sudo mysql -u root -p${PASSWORD} -e "CREATE DATABASE ${DB_NAME};"
+
 # Set up MySQL database and user
 log_message "Setting up MySQL database..."
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';"
-sudo mysql -e "FLUSH PRIVILEGES;"
-sudo mysql -u root -p${PASSWORD} -e "CREATE DATABASE ${DB_NAME};"
+log_message "PASSWORD variable: ${PASSWORD}"  # Debug output
+log_message "DB_NAME variable: ${DB_NAME}"    # Debug output
 
+# Attempt to set root password
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${PASSWORD}';" || {
+    log_message "Failed to set root password. Error: $?"
+    exit 1
+}
+
+sudo mysql -e "FLUSH PRIVILEGES;" || {
+    log_message "Failed to flush privileges. Error: $?"
+    exit 1
+}
+
+# Attempt to create database
+sudo mysql -u root -p"${PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};" || {
+    log_message "Failed to create database. Error: $?"
+    exit 1
+}
+
+log_message "MySQL security configuration completed."
+
+# Verify database creation
+if sudo mysql -u root -p"${PASSWORD}" -e "SHOW DATABASES LIKE '${DB_NAME}';" | grep "${DB_NAME}"; then
+    log_message "Database ${DB_NAME} created successfully."
+else
+    log_message "Failed to create database ${DB_NAME}."
+    exit 1
+fi
 log_message "MySQL security configuration completed."
 
 log_message "Contents of /tmp before unzipping:"
