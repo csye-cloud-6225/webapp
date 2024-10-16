@@ -68,7 +68,7 @@ jobs:
           echo "Running Packer Build..."
           docker run --rm -v "${{ github.workspace }}:/workspace" \
             -w /workspace/packer-template \
-            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e PASSWORD -e DB_NAME \ -e \DB_USER -e \DB_PORT -e DB_HOST \
+            -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e PASSWORD -e DB_NAME -e DB_USER -e DB_PORT -e DB_HOST \
             -v packer_plugins:/root/.config/packer/plugins \
             hashicorp/packer:latest build \
             -var "Password=${DB_PASSWORD}" \
