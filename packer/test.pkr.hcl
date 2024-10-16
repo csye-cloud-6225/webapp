@@ -7,6 +7,7 @@ packer {
     }
   }
 }
+
 variable "Password" {
   type    = string
   default = ""
@@ -17,10 +18,6 @@ variable "DB_NAME" {
   default = ""
 }
 
-variable "MY_APP_SERVICE_CONTENT" {
-  type    = string
-  default = ""
-}
 variable "aws_region" {
   type    = string
   default = "us-east-1"
@@ -65,38 +62,28 @@ source "amazon-ebs" "my-ami" {
   subnet_id     = var.subnet_id
 }
 
-
-
 build {
   sources = ["source.amazon-ebs.my-ami"]
 
   provisioner "file" {
-    source      = "../webapp.zip"
+    source      = "webapp.zip"  # Reference the ZIP file
     destination = "/tmp/webapp.zip"
   }
+  
   provisioner "shell" {
     inline = [
       "echo 'DB_PASSWORD=${var.Password}' >> /tmp/env_vars",
       "echo 'DB_NAME=${var.DB_NAME}' >> /tmp/env_vars"
     ]
   }
+  
   provisioner "file" {
-    source      = "webapp.zip"
-    destination = "/app/webapp.zip"
-  }
-
-  provisioner "file" {
-    source      = "my-app.service"
+    source      = "my-app.service"  # Directly reference this file
     destination = "/etc/systemd/system/my-app.service"
   }
 
   provisioner "file" {
-    source      = "../my-app.service"
-    destination = "/tmp/my-app.service"
-  }
-
-  provisioner "file" {
-    source      = "install_webapp.sh"
+    source      = "packer/install_webapp.sh"  # Reference the script from the packer directory
     destination = "/tmp/install_webapp.sh"
   }
 
