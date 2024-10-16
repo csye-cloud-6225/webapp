@@ -83,7 +83,7 @@ build {
   }
 
   provisioner "file" {
-    source      = "${path.root}install_webapp.sh" # Reference the script from the packer directory
+    source      = "${path.root}/install_webapp.sh" # Reference the script from the packer directory
     destination = "/tmp/install_webapp.sh"
   }
 
