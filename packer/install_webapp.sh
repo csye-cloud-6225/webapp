@@ -20,10 +20,6 @@ log_message "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
-# Set up MySQL database and user
-log_message "Setting up MySQL database..."
-log_message "PASSWORD variable: ${DB_PASSWORD}"  # Debug output
-log_message "DB_NAME variable: ${DB_NAME}"    # Debug output
 
 sudo mysql -u root -p'${DB_PASSWORD}' <<EOF
 # Attempt to set root password
@@ -32,8 +28,8 @@ FLUSH PRIVILEGES;
 
 # Attempt to create database
 CREATE DATABASE IF NOT EXISTS \${DB_NAME}\;
-CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
-GRANT ALL PRIVILEGES ON \${DB_NAME}\.* TO '${DB_USER}'@'localhost';
+CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Parna.coM001';
+GRANT ALL PRIVILEGES ON \${DB_NAME}\.* TO 'root'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 
