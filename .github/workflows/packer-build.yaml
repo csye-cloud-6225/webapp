@@ -1,0 +1,48 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build application artifact
+      run: |
+        npm run build
+        zip -r webapp.zip .
+
+    - name: Set up Packer
+      uses: hashicorp/setup-packer@main
+      with:
+        version: '1.7.8'  # or whichever version you prefer
+
+    - name: Build AMI
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        DB_PASSWORD: ${{ secrets.Password }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+      run: |
+        packer build \
+          -var "Password=${Password}" \
+          -var "DB_NAME=${DB_NAME}" \
+          packer/test.pkr.hcl
+
+    - name: Clean up
+      run: rm webapp.zip
