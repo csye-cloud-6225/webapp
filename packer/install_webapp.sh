@@ -28,6 +28,16 @@ echo "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
 sudo unzip /tmp/webapp.zip -d /opt/webapp
 
+# Debug: List contents of /tmp
+log_message "Listing contents of /tmp:"
+ls -la /tmp
+
+# Check if my-app.service exists
+if [ ! -f /tmp/my-app.service ]; then
+    log_message "Error: /tmp/my-app.service does not exist"
+    exit 1
+fi
+
 # List contents to verify the extraction
 echo "Listing files in /opt/webapp..."
 sudo ls -la /opt/webapp
