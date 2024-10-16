@@ -28,6 +28,12 @@ sudo mysql -u root -p${Password} -e "CREATE DATABASE ${DB_NAME};"
 
 log_message "MySQL security configuration completed."
 
+log_message "Contents of /tmp before unzipping:"
+ls -la /tmp
+log_message "File details of webapp.zip:"
+file /tmp/webapp.zip || echo "webapp.zip not found"
+log_message "Attempting to unzip /tmp/webapp.zip..."
+
 # Step 3: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
