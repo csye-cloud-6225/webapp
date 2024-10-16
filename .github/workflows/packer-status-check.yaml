@@ -25,6 +25,10 @@ jobs:
         run: |
           mv my-app.service packer-template/
 
+      - name: Move install_webapp.sh to packer-template
+        run: |
+          mv packer/install_webapp.sh packer-template/
+
       - name: List repository contents
         run: |
           echo "Root directory contents:"
