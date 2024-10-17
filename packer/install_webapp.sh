@@ -23,7 +23,7 @@ sudo systemctl start mysql
 
 sudo mysql -u root <<EOF
 # Attempt to set root password
-"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';" 
+"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001'"; 
 FLUSH PRIVILEGES;
 CREATE DATABASE IF NOT EXISTS health_check;
 EOF
