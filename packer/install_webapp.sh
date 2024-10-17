@@ -20,12 +20,32 @@ log_message "Starting MySQL service..."
 sudo systemctl enable mysql
 sudo systemctl start mysql
 
-
-sudo mysql -u root <<EOF
+# Configure MySQL
+log_message "Configuring MySQL..."
+sudo mysql <<EOF
+CREATE DATABASE IF NOT EXISTS health_check;
+SELECT user, host, plugin FROM mysql.user WHERE user = 'root';
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';
 FLUSH PRIVILEGES;
-CREATE DATABASE IF NOT EXISTS health_check;
+SHOW DATABASES;
+EXIT;
 EOF
+
+log_message "MySQL configuration completed."
+
+# Verify MySQL connection
+log_message "Verifying MySQL connection..."
+if mysql -u root -pParna.coM001 -e "SHOW DATABASES;" > /dev/null 2>&1; then
+    log_message "MySQL connection successful."
+else
+    log_message "Error: Unable to connect to MySQL. Check the error log for details."
+    exit 1
+fi
+# sudo mysql -u root <<EOF
+# ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';
+# FLUSH PRIVILEGES;
+# CREATE DATABASE IF NOT EXISTS health_check;
+# EOF
 
 log_message "MySQL security configuration completed."
 
