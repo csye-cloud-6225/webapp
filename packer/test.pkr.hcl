@@ -72,6 +72,7 @@ source "amazon-ebs" "my-ami" {
   source_ami    = var.source_ami
   ssh_username  = var.ssh_username
   subnet_id     = var.subnet_id
+
 }
 
 build {
