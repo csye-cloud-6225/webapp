@@ -78,7 +78,7 @@ build {
   sources = ["source.amazon-ebs.my-ami"]
 
   provisioner "file" {
-    source      = "../webapp.zip"
+    source      = "${path.root}/webapp.zip"
     destination = "/tmp/webapp.zip"
   }
   provisioner "shell" {
@@ -91,14 +91,14 @@ build {
   }
 
   provisioner "file" {
-    source      = "../my-app.service"
+    source      = "${path.root}/my-app.service"
     destination = "/tmp/my-app.service"
   }
 
-  // provisioner "file" {
-  //   source      = "${path.root}/install_webapp.sh"
-  //   destination = "/tmp/install_webapp.sh"
-  // }
+  provisioner "file" {
+    source      = "${path.root}/install_webapp.sh"
+    destination = "/tmp/install_webapp.sh"
+  }
 
   provisioner "shell" {
     inline = [
