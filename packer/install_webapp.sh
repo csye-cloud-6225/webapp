@@ -96,29 +96,21 @@ Environment="DB_PORT=${DB_PORT}"
 EOT
 
 # Set up systemd service
-debug_log "Setting up systemd service..."
+log_message "Setting up systemd service..."
 sudo cp /opt/my-app.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
 sudo systemctl start my-app.service
 
 # Check service status
-debug_log "Checking my-app service status..."
+log_message "Checking my-app service status..."
 sudo systemctl status my-app.service
-
-# Set correct permissions
-chmod 600 /opt/webapp/.env
-chown csye6225:csye6225 /opt/webapp/.env
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
 
-# Set correct ownership and permissions
-sudo chown csye6225:csye6225 /opt/webapp/.env
-sudo chmod 600 /opt/webapp/.env
-
 # List contents of /opt/webapp
-debug_log "Contents of /opt/webapp:"
+log_message "Contents of /opt/webapp:"
 ls -la /opt/webapp
 
 # Log completion message
