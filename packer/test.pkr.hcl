@@ -106,6 +106,12 @@ build {
       "ls -la /tmp",
     ]
   }
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y unzip"
+    ]
+  }
 
   provisioner "shell" {
     environment_vars = [
