@@ -28,7 +28,7 @@ SELECT user, host, plugin FROM mysql.user WHERE user = 'root';
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';
 FLUSH PRIVILEGES;
 SHOW DATABASES;
-EXIT;
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'health_check';
 EOF
 
 log_message "MySQL configuration completed."
