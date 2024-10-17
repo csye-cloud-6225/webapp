@@ -2,52 +2,28 @@ name: Packer Status Check
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main  # Change to your default branch if it's not 'main'
 
 jobs:
-  packer-status-check:
+  fmt:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup Packer
-        uses: hashicorp/setup-packer@main
-        with:
-          version: "1.9.4"  # Specify the Packer version you want to use
-
-      - name: Zip webapp folder
+      - name: Run Packer Init
         run: |
-          if [ -d "../webapp" ]; then
-            zip -r packer-template/webapp.zip ../webapp
-            echo "Webapp folder zipped successfully"
-          else
-            echo "Webapp folder not found in the expected location"
-            exit 1
-          fi
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
+          -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest init test.pkr.hcl || { echo "Packer init failed"; exit 1; }
 
-      - name: Verify packer-template contents
+      - name: Run Packer Format Check
         run: |
-          echo "Contents of packer-template directory:"
-          ls -la packer-template
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer hashicorp/packer:latest fmt -check test.pkr.hcl
 
-      - name: Packer fmt check
-        run: |
-          packer fmt -check -diff packer-template/test.pkr.hcl
-        continue-on-error: false
 
-      - name: Packer validate
+      - name: Run Packer Validate
         run: |
-          cd packer-template
-          packer init test.pkr.hcl
-          packer validate -syntax-only test.pkr.hcl
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        continue-on-error: false
-
-      - name: Prevent merge on failure
-        if: failure()
-        run: |
-          echo "Packer validation failed. This pull request cannot be merged."
-          exit 1
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace/packer \
+          -v packer_plugins:/root/.config/packer/plugins hashicorp/packer:latest validate test.pkr.hcl || { echo "Packer validate failed"; exit 1; }
