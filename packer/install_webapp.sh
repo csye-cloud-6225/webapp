@@ -77,8 +77,8 @@ sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
 sudo chown root:root /etc/systemd/system/my-app.service
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
-sudo systemctl status my-app.service
 sudo systemctl start my-app.service || { log_message "Failed to satrt servise"; exit 1;}
+sudo systemctl status my-app.service
 sudo journalctl -xeu my-app.service
 
 # List contents of /opt/webapp--------
