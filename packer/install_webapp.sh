@@ -21,15 +21,14 @@ sudo systemctl enable mysql
 sudo systemctl start mysql
 
 
-sudo mysql -u root -p'Parna.coM001' <<EOF
+sudo mysql -u root <<EOF
 # Attempt to set root password
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';" 
+"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';" 
 FLUSH PRIVILEGES;
-
-# Attempt to create database
 CREATE DATABASE IF NOT EXISTS health_check;
-CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Parna.coM001';
 EOF
+
+
 
 log_message "MySQL security configuration completed."
 
