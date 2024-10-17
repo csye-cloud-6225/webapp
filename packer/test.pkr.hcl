@@ -131,6 +131,7 @@ build {
       "sudo unzip /opt/webapp.zip -d /opt/webapp",
       "echo 'Listing contents of /opt/webapp after unzipping:'",
       "sudo mv /tmp/install_webapp.sh /opt/webapp",
+      "sudo mv /tmp/my-app.service /opt/webapp",
       "ls -la /opt/webapp",
       "echo 'Making install_webapp.sh executable'",
       "sudo chmod +x /opt/webapp/install_webapp.sh",
