@@ -8,7 +8,7 @@ Group=csye6225
 WorkingDirectory=/opt/webapp
 ExecStart=/usr/bin/node /opt/webapp/index.js
 Restart=always
-EnvironmentFile=/opt/webapp/webapp/.env
+EnvironmentFile=/opt/webapp/.env
 StandardOutput=journal
 StandardError=journal
 
