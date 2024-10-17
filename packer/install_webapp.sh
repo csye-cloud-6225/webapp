@@ -55,7 +55,6 @@ log_message "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
 # Ensure csye6225 has the correct permissions for its home directory
-sudo chown -R csye6225:csye6225 /home/csye6225
 
 # Step 6: Set ownership of /opt/webapp to csye6225
 log_message "Setting ownership of /opt/webapp to csye6225..."
