@@ -130,7 +130,7 @@ build {
       "echo 'Running install_webapp.sh'",
       "sudo /opt/webapp/install_webapp.sh"
       "echo 'Making install_webapp.sh executable'",
-      "echo 'Running install_webapp.sh'",
+      "echo 'Running install_webapp.sh'"
     ]
   }
 }
