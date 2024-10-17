@@ -104,10 +104,6 @@ build {
     inline = [
       "echo 'Listing contents of /tmp:'",
       "ls -la /tmp",
-      // "sudo chown root:root /etc/systemd/system/my-app.service",
-      // "sudo chmod 644 /etc/systemd/system/my-app.service",
-      // "echo 'Listing contents of /etc/systemd/system/'",
-      // "ls -la /etc/systemd/system/my-app.service"
     ]
   }
 
@@ -121,15 +117,20 @@ build {
     ]
     inline = [
       "echo 'Listing contents of /tmp before moving webapp.zip:'",
-      "ls -la /tmp",
       "echo 'Moving webapp.zip to /opt/'",
       "sudo mv /tmp/webapp.zip /opt/webapp.zip",
-      // "sudo chmod 644 /opt/webapp.zip",
       "echo 'Listing contents of /opt/'",
       "ls -la /opt/webapp.zip",
+      "echo 'Unzipping webapp.zip to /opt/webapp'",
+      "sudo unzip /opt/webapp.zip -d /opt/webapp",
+      "echo 'Listing contents of /opt/webapp after unzipping:'",
+      "ls -la /opt/webapp",
       "echo 'Making install_webapp.sh executable'",
-      // "chmod +x /tmp/install_webapp.sh",
+      "sudo chmod +x /opt/webapp/install_webapp.sh",
       "echo 'Running install_webapp.sh'",
+      "sudo /opt/webapp/install_webapp.sh",
+      "echo 'Making install_webapp.sh executable'",
+      "echo 'Running install_webapp.sh'"
     ]
   }
 }

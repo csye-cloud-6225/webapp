@@ -11,8 +11,6 @@ log_message() {
 log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip mysql-server
-sudo npm uninstall bcrypt
-sudo npm install bcrypt
 
 # Step 2: Configure MySQL server
 log_message "Configuring MySQL server..."

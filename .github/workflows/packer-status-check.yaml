@@ -20,26 +20,21 @@ jobs:
           mkdir -p packer-template
           zip -r webapp.zip . -x ".git/*" "packer-template/*" ".github/*"
           mv webapp.zip packer-template/
-
       - name: Move my-app.service to packer-template
         run: |
           mv my-app.service packer-template/
-
       - name: Move install_webapp.sh to packer-template
         run: |
           mv packer/install_webapp.sh packer-template/
-
       - name: Move test.pkr.hcl to packer-template
         run: |
           mv packer/test.pkr.hcl packer-template/
-
       - name: List repository contents
         run: |
           echo "Root directory contents:"
           ls -la
           echo "packer-template directory contents:"
           ls -la packer-template
-
       - name: Check necessary files
         run: |
           for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
@@ -50,7 +45,6 @@ jobs:
               exit 1
             fi
           done
-
       - name: Upload webapp.zip as artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v3
@@ -65,14 +59,12 @@ jobs:
             -w /workspace/packer-template -v packer_plugins:/root/.config/packer/plugins \
             hashicorp/packer:latest init test.pkr.hcl || { echo "Packer init failed"; exit 1; }
           echo "Packer Init completed successfully."
-
       - name: Run Packer Format Check
         run: |
           echo "Running Packer Format Check..."
           docker run --rm -v "${{ github.workspace }}:/workspace" \
             -w /workspace/packer-template hashicorp/packer:latest fmt -check test.pkr.hcl \
             || { echo "Packer format check failed"; exit 1; }
-
       - name: Packer validate
         run: |
           cd packer-template
