@@ -104,10 +104,10 @@ build {
     inline = [
       "echo 'Listing contents of /tmp:'",
       "ls -la /tmp",
-      "sudo chown root:root /etc/systemd/system/my-app.service",
+      // "sudo chown root:root /etc/systemd/system/my-app.service",
       // "sudo chmod 644 /etc/systemd/system/my-app.service",
-      "echo 'Listing contents of /etc/systemd/system/'",
-      "ls -la /etc/systemd/system/my-app.service"
+      // "echo 'Listing contents of /etc/systemd/system/'",
+      // "ls -la /etc/systemd/system/my-app.service"
     ]
   }
 
@@ -130,8 +130,6 @@ build {
       "echo 'Making install_webapp.sh executable'",
       // "chmod +x /tmp/install_webapp.sh",
       "echo 'Running install_webapp.sh'",
-      "sudo -u "
-
     ]
   }
 }

@@ -29,15 +29,12 @@ FLUSH PRIVILEGES;
 CREATE DATABASE IF NOT EXISTS health_check;
 EOF
 
-
-
 log_message "MySQL security configuration completed."
 
 log_message "Contents of /tmp before unzipping:"
 ls -la /tmp
 log_message "File details of webapp.zip:"
 file /tmp/webapp.zip || echo "webapp.zip not found"
-log_message "Attempting to unzip /tmp/webapp.zip..."
 
 # Step 3: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
@@ -62,7 +59,6 @@ log_message "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
 # Ensure csye6225 has the correct permissions for its home directory
-sudo mkdir -p /home/csye6225
 sudo chown -R csye6225:csye6225 /home/csye6225
 
 # Step 6: Set ownership of /opt/webapp to csye6225
@@ -77,7 +73,7 @@ sudo npm install bcrypt
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
-https://github.com/nilvishah/webapp/pull/new/a04-123
+
 # Step 8: Copy and enable the systemd service file
 sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
 sudo chown root:root /etc/systemd/system/my-app.service
