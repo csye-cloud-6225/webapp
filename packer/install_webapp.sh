@@ -77,14 +77,29 @@ sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 log_message "Copying systemd service file and enabling the service..."
 if [ -f /opt/webapp/my-app.service ]; then
     sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
+    sudo chown root:root /etc/systemd/system/my-app.service
+    if [ $? -ne 0 ]; then
+        log_message "Error moving service file"
+        exit 1
+    fi
+    sudo chmod 644 /etc/systemd/system/my-app.service
     sudo systemctl daemon-reload
-    sudo systemctl enable my-app.service
-    sudo systemctl start my-app.service
+    if ! sudo systemctl enable my-app.service; then
+        log_message "Error enabling service"
+        sudo systemctl status my-app.service
+        exit 1
+    fi
+    if ! sudo systemctl start my-app.service; then
+        log_message "Error starting service"
+        sudo systemctl status my-app.service
+        exit 1
+    fi
     sudo systemctl status my-app.service
 else
-    log_message "Error: my-app.service file not found in /tmp"
+    log_message "Error: my-app.service file not found in /opt/webapp"
     exit 1
 fi
+sudo journalctl -u /etc/systemd/system/my-app.service
 # Set environment variables securely
 # Create the directory if it doesn't exist
 sudo mkdir -p /etc/systemd/system/my-app.service.d
