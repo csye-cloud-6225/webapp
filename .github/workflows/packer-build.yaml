@@ -101,6 +101,11 @@ jobs:
             -var "db_port=$DB_PORT" \
             test.pkr.hcl
 
+      - name: Share AMI with DEMO account
+        run: |
+          AMI_ID=$(jq -r '.builds[-1].artifact_id' manifest.json | cut -d ":" -f2)
+          aws ec2 modify-image-attribute --image-id $AMI_ID --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+
       
 
       
