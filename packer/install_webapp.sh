@@ -55,10 +55,12 @@ log_message "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
 # Ensure csye6225 has the correct permissions for its home directory
-
+sudo mkdir -p /home/csye6225
+sudo chown csye6225:csye6225 /home/csye6225
 # Step 6: Set ownership of /opt/webapp to csye6225
 log_message "Setting ownership of /opt/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/webapp
+
 
 # Step 7: Install Node.js dependencies
 log_message "Installing Node.js dependencies..."
@@ -68,6 +70,7 @@ sudo npm install bcrypt
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
+sudo chown csye6225:csye6225 /opt/webapp/.env
 
 # Step 8: Copy and enable the systemd service file
 sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
