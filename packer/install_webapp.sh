@@ -96,7 +96,7 @@ Environment="DB_PORT=${DB_PORT}"
 EOT
 
 # Set up systemd service
-debug_log "Setting up systemd service..."
+log_message "Setting up systemd service..."
 sudo cp /opt/my-app.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
