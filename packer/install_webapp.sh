@@ -22,7 +22,7 @@ sudo systemctl start mysql
 
 # Configure MySQL
 log_message "Configuring MySQL..."
-sudo mysql <<EOF
+sudo mysql -u root -pParna.coM001<<EOF
 CREATE DATABASE IF NOT EXISTS health_check;
 SELECT user, host, plugin FROM mysql.user WHERE user = 'root';
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Parna.coM001';
