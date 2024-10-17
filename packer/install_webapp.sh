@@ -76,7 +76,7 @@ sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 # Step 8: Copy and enable the systemd service file
 log_message "Copying systemd service file and enabling the service..."
 if [ -f /opt/webapp/my-app.service ]; then
-    sudo cp /opt/webapp/my-app.service /etc/systemd/system/
+    sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app/service
     sudo systemctl daemon-reload
     sudo systemctl enable my-app.service
     sudo systemctl start my-app.service
@@ -103,7 +103,7 @@ EOT
 echo "Contents of .env file:"
 cat /opt/webapp/.env
 
-# List contents of /opt/webapp
+# List contents of /opt/webapp--------
 log_message "Contents of /opt/webapp:"
 ls -la /opt/webapp
 
