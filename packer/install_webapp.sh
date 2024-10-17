@@ -11,6 +11,8 @@ log_message() {
 log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip mysql-server
+sudo npm uninstall bcrypt
+sudo npm install bcrypt
 
 # Step 2: Configure MySQL server
 log_message "Configuring MySQL server..."
@@ -77,6 +79,8 @@ if [ -f /opt/webapp/my-app.service ]; then
     sudo cp /opt/webapp/my-app.service /etc/systemd/system/
     sudo systemctl daemon-reload
     sudo systemctl enable my-app.service
+    sudo systemctl start my-app.service
+    sudo systemctl status my-app.service
 else
     log_message "Error: my-app.service file not found in /tmp"
     exit 1
@@ -95,16 +99,6 @@ Environment="DB_NAME=${DB_NAME}"
 Environment="DB_PORT=${DB_PORT}"
 EOT
 
-# Set up systemd service
-log_message "Setting up systemd service..."
-sudo cp /opt/my-app.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable my-app.service
-sudo systemctl start my-app.service
-
-# Check service status
-log_message "Checking my-app service status..."
-sudo systemctl status my-app.service
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
