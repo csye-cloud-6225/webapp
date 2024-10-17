@@ -64,6 +64,7 @@ sudo ls -la /opt/webapp
 # Step 4: Navigate to the webapp directory
 cd /opt/webapp || exit 1
 
+
 # Check if package.json exists
 if [ ! -f package.json ]; then
     log_message "Error: package.json not found!"

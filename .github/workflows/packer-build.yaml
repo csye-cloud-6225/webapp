@@ -100,21 +100,6 @@ jobs:
             -var "db_name=$DB_NAME" \
             -var "db_port=$DB_PORT" \
             test.pkr.hcl
-
-      - name: Share AMI with DEMO account
-        env:
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer-template/manifest.json | cut -d ":" -f2)
-          [ -z "$AMI_ID" ] && { echo "Error: No AMI ID found"; exit 1; }
-          aws ec2 modify-image-attribute \
-            --image-id "$AMI_ID" \
-            --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]" \
-            --attribute launchPermission
-        shell: /bin/bash
       
 
       
