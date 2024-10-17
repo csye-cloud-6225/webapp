@@ -24,6 +24,16 @@ jobs:
         with:
           version: "1.9.4"
 
+      - name: Create env
+        run: |
+          echo DB_HOST: ${{ secrets.DB_HOST }} >> .env
+          echoDB_USER: ${{ secrets.DB_USER }} >> .env
+          echo DB_PASSWORD: ${{ secrets.Password }} >> .env
+          echo DB_NAME: ${{ secrets.DB_NAME }} >> .env
+          echo DB_PORT: ${{ secrets.DB_PORT }} >> .env
+
+
+
       - name: Create webapp.zip
         run: |
           mkdir -p packer-template
@@ -80,11 +90,11 @@ jobs:
 
       - name: Build AMI
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.Password }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PORT: ${{ secrets.DB_PORT }}
+          echo DB_HOST: ${{ secrets.DB_HOST }} >> .env
+          echoDB_USER: ${{ secrets.DB_USER }} >> .env
+          echo DB_PASSWORD: ${{ secrets.Password }} >> .env
+          echo DB_NAME: ${{ secrets.DB_NAME }} >> .env
+          echo DB_PORT: ${{ secrets.DB_PORT }} >> .env
         run: |
           cd packer-template
           packer build -debug -var-file=variables.pkrvars.hcl \
