@@ -32,6 +32,7 @@ jobs:
           echo "DB_NAME: ${{ secrets.DB_NAME }}" >> .env
           echo "DB_PORT: ${{ secrets.DB_PORT }}" >> .env
           echo "APP_PORT: ${{ secrets.APP_PORT }}" >> .env
+          echo "PORT_MAPPING: ${{ secrets.PORT_MAPPING }}" >> .env
 
 
 
