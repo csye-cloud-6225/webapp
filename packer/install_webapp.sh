@@ -74,15 +74,9 @@ log_message "Installing Node.js dependencies..."
 sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 sudo npm uninstall bcrypt
 sudo npm install bcrypt
-# Now proceed to create the override.conf file
-sudo tee /etc/systemd/system/my-app.service.d/override.conf <<EOT
-[Service]
-Environment="DB_HOST=${DB_HOST}"
-Environment="DB_USER=${DB_USER}"
-Environment="DB_PASSWORD=${DB_PASSWORD}"
-Environment="DB_NAME=${DB_NAME}"
-Environment="DB_PORT=${DB_PORT}"
-EOT
+
+echo "Contents of .env file:"
+cat /opt/webapp/.env
 
 # Step 8: Copy and enable the systemd service file
 sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
@@ -123,8 +117,7 @@ sudo journalctl -xeu my-app.service
 
 
 
-echo "Contents of .env file:"
-cat /opt/webapp/.env
+
 
 # List contents of /opt/webapp--------
 log_message "Contents of /opt/webapp:"
