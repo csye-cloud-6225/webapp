@@ -90,12 +90,6 @@ jobs:
             test.pkr.hcl
 
       - name: Build AMI
-        env:
-          echo DB_HOST: ${{ secrets.DB_HOST }} >> .env
-          echoDB_USER: ${{ secrets.DB_USER }} >> .env
-          echo DB_PASSWORD: ${{ secrets.Password }} >> .env
-          echo DB_NAME: ${{ secrets.DB_NAME }} >> .env
-          echo DB_PORT: ${{ secrets.DB_PORT }} >> .env
         run: |
           cd packer-template
           packer build -debug -var-file=variables.pkrvars.hcl \
@@ -106,23 +100,6 @@ jobs:
             -var "db_port=$DB_PORT" \
             test.pkr.hcl
 
-      - name: Get AMI ID
-        id: get-ami-id
-        run: |
-          AMI_ID=$(jq -r '.builds[-1].artifact_id' packer-template/manifest.json | cut -d ":" -f2)
-          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+      
 
-      - name: Clean up
-        if: always()
-        run: |
-          rm -f packer-template/webapp.zip
-
-      - name: Debug Output
-        if: failure()
-        run: |
-          echo "Packer template contents:"
-          cat packer-template/test.pkr.hcl
-          echo "Variables file contents:"
-          cat packer-template/variables.pkrvars.hcl
-          echo "Environment variables (excluding sensitive data):"
-          env | grep -v -e DB_PASSWORD -e AWS
+      
