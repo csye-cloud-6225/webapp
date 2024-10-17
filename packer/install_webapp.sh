@@ -94,9 +94,6 @@ sudo chmod 644 /opt/webapp/.env
 sudo chown csye6225:csye6225 /opt/webapp/.env
 sudo -u csye6225 printenv
 
-log_message "Running database migrations..."
-cd /opt/webapp
-sudo -u csye6225 bash -c 'npx sequelize-cli db:migrate'
 
 # Step 8: Copy and enable the systemd service file
 sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
