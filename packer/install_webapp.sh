@@ -88,6 +88,7 @@ log_message "Installing Node.js dependencies..."
 sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
 sudo npm uninstall bcrypt
 sudo npm install bcrypt
+sudo -u csye6225 npx sequelize-cli db:migrate
 
 echo "Contents of .env file:"
 cat /opt/webapp/.env
