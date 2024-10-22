@@ -11,7 +11,7 @@ log_message "checking worklow file"
 # Step 1: Update packages and install dependencies
 log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
-# sudo apt-get install -y nodejs npm unzip mysql-server
+sudo apt-get install -y nodejs npm unzip 
 
 # # Step 2: Configure MySQL server
 # log_message "Configuring MySQL server..."
