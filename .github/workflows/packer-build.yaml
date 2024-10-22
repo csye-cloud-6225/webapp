@@ -24,10 +24,17 @@ jobs:
         with:
           version: "1.9.4"
 
+      - name: Create env
+        run: |
+          echo "NODE_ENV=production" >> .env  # Ensure production behavior
+          echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
+          echo "PORT_MAPPING=${{ secrets.PORT_MAPPING }}" >> .env
+
+
       - name: Create webapp.zip
         run: |
           mkdir -p packer-template
-          zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
+          zip -r webapp.zip . -x ".git" "packer-template/" ".github/" -i ".env"
           mv webapp.zip packer-template/
 
       - name: Move necessary files to packer-template
