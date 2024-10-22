@@ -1,105 +1,146 @@
-name: Packer AMI Build
+# AWS AMI Configuration
+packer {
+  required_plugins {
+    amazon = {
+      version = ">= 1.0.0, <2.0.0"
+      source  = "github.com/hashicorp/amazon"
+    }
+  }
+}
 
-on:
-  push:
-    branches:
-      - main
+variable "db_password" {
+  type    = string
+  default = ""
+}
 
-jobs:
-  build-ami:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+variable "db_name" {
+  type    = string
+  default = ""
+}
+variable "db_user" {
+  type    = string
+  default = ""
+}
+variable "db_port" {
+  type    = string
+  default = ""
+}
+variable "db_host" {
+  type    = string
+  default = ""
+}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
 
-      - name: Setup Packer
-        uses: hashicorp/setup-packer@main
-        with:
-          version: "1.9.4"
+variable "source_ami" {
+  type    = string
+  default = "ami-0cad6ee50670e3d0e"
+}
 
-      - name: Create env
-        run: |
-          echo "DB_HOST: ${{ secrets.DB_HOST }}" >> .env
-          echo "DB_USER: ${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD: ${{ secrets.Password }}" >> .env
-          echo "DB_NAME: ${{ secrets.DB_NAME }}" >> .env
-          echo "DB_PORT: ${{ secrets.DB_PORT }}" >> .env
-          echo "APP_PORT: ${{ secrets.APP_PORT }}" >> .env
-          echo "PORT_MAPPING: ${{ secrets.PORT_MAPPING }}" >> .env
+variable "ssh_username" {
+  type    = string
+  default = "ubuntu"
+}
 
+variable "subnet_id" {
+  type    = string
+  default = "subnet-01559dcd81713aec8"
+}
 
+source "amazon-ebs" "my-ami" {
+  region          = var.aws_region
+  profile         = "dev_role"
+  ami_name        = "MyAMI_Image-{{timestamp}}"
+  ami_description = "AMI for CSYE 6225"
 
-      - name: Create webapp.zip
-        run: |
-          mkdir -p packer-template
-          zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
-          mv webapp.zip packer-template/
+  tags = {
+    Name        = "test-CSYE6225_Custom_AMI"
+    Environment = "dev"
+  }
 
-      - name: Move necessary files to packer-template
-        run: |
-          mv my-app.service packer-template/
-          mv packer/install_webapp.sh packer-template/
-          mv packer/test.pkr.hcl packer-template/
+  launch_block_device_mappings {
+    device_name           = "/dev/sda1"
+    volume_size           = 25
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
 
-      - name: List repository contents
-        run: |
-          echo "Root directory contents:"
-          ls -la
-          echo "packer-template directory contents:"
-          ls -la packer-template
+  instance_type = "t2.small"
+  source_ami    = var.source_ami
+  ssh_username  = var.ssh_username
+  subnet_id     = var.subnet_id
+  ami_users     = ["438465161714"]
 
-      - name: Check necessary files
-        run: |
-          for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
-            if [ ! -f "packer-template/$file" ]; then
-              echo "$file not found in packer-template directory"
-              echo "Current directory structure:"
-              find . -type f
-              exit 1
-            fi
-          done
+}
 
-      - name: Create variables file
-        run: |
-          cat << EOF > packer-template/variables.pkrvars.hcl
-          aws_region = "us-east-1"
-          instance_type = "t2.small"
-          ssh_username = "ubuntu"
-          source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-01559dcd81713aec8"
-          EOF
+build {
+  sources = ["source.amazon-ebs.my-ami"]
 
-      - name: Initialize Packer
-        run: packer init ./packer-template/test.pkr.hcl
+  provisioner "file" {
+    source      = "${path.root}/webapp.zip"
+    destination = "/tmp/webapp.zip"
+  }
+  provisioner "shell" {
+    inline = [
+      "ls -la /tmp/webapp.zip",
+      "file /tmp/webapp.zip",
+      "echo 'Contents of /tmp:'",
+      "ls -la /tmp"
+    ]
+  }
 
-      - name: Validate Packer Template
-        run: |
-          cd packer-template
-          packer validate -var-file=variables.pkrvars.hcl \
-            -var "db_host=${{ secrets.DB_HOST }}" \
-            -var "db_user=${{ secrets.DB_USER }}" \
-            -var "db_password=${{ secrets.Password }}" \
-            -var "db_name=${{ secrets.DB_NAME }}" \
-            -var "db_port=${{ secrets.DB_PORT }}" \
-            test.pkr.hcl
+  provisioner "file" {
+    source      = "${path.root}/my-app.service"
+    destination = "/tmp/my-app.service"
+  }
 
-      - name: Build AMI
-        run: |
-          cd packer-template
-          packer build -debug -var-file=variables.pkrvars.hcl \
-            -var "db_host=$DB_HOST" \
-            -var "db_user=$DB_USER" \
-            -var "db_password=$DB_PASSWORD" \
-            -var "db_name=$DB_NAME" \
-            -var "db_port=$DB_PORT" \
-            test.pkr.hcl
-      
+  provisioner "file" {
+    source      = "${path.root}/install_webapp.sh"
+    destination = "/tmp/install_webapp.sh"
+  }
 
-      
+  provisioner "shell" {
+    inline = [
+      "echo 'Listing contents of /tmp:'",
+      "ls -la /tmp",
+    ]
+  }
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y unzip"
+    ]
+  }
+
+  provisioner "shell" {
+    environment_vars = [
+      "PASSWORD=${var.db_password}",
+      "DB_NAME=${var.db_name}",
+      "DB_HOST=${var.db_host}",
+      "DB_USER=${var.db_user}",
+      "DB_PORT=${var.db_port}"
+    ]
+    inline = [
+      "echo 'Listing contents of /tmp before moving webapp.zip:'",
+      "echo 'Moving webapp.zip to /opt/'",
+      "sudo mv /tmp/webapp.zip /opt/webapp.zip",
+      "echo 'Listing contents of /opt/'",
+      "ls -la /opt/webapp.zip",
+      "echo 'Unzipping webapp.zip to /opt/webapp'",
+      "sudo unzip /opt/webapp.zip -d /opt/webapp",
+      "echo 'Listing contents of /opt/webapp after unzipping:'",
+      "sudo mv /tmp/install_webapp.sh /opt/webapp",
+      "sudo mv /tmp/my-app.service /opt/webapp",
+      "ls -la /opt/webapp",
+      "echo 'Making install_webapp.sh executable'",
+      "sudo chmod +x /opt/webapp/install_webapp.sh",
+      "echo 'Running install_webapp.sh'",
+      "sudo /opt/webapp/install_webapp.sh",
+      "echo 'Making install_webapp.sh executable'",
+      "echo 'Running install_webapp.sh'"
+    ]
+  }
+}
