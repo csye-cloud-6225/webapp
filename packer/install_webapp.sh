@@ -91,11 +91,11 @@ sudo npm uninstall bcrypt
 sudo npm install bcrypt
 # sudo -u csye6225 npx sequelize-cli db:migrate
 
-echo "Contents of .env file:"
-cat /opt/webapp/.env
-sudo chmod 644 /opt/webapp/.env
-sudo chown csye6225:csye6225 /opt/webapp/.env
-sudo -u csye6225 printenv
+# echo "Contents of .env file:"
+# cat /opt/webapp/.env
+# sudo chmod 644 /opt/webapp/.env
+# sudo chown csye6225:csye6225 /opt/webapp/.env
+# sudo -u csye6225 printenv
 
 
 # Step 8: Copy and enable the systemd service file
