@@ -79,16 +79,16 @@ jobs:
       - name: Initialize Packer
         run: packer init ./packer-template/test.pkr.hcl
 
-      - name: Validate Packer Template
-        run: |
-          # cd packer-template
-          # packer validate -var-file=variables.pkrvars.hcl \
-          #   -var "db_host=${{ secrets.DB_HOST }}" \
-          #   -var "db_user=${{ secrets.DB_USER }}" \
-          #   -var "db_password=${{ secrets.Password }}" \
-          #   -var "db_name=${{ secrets.DB_NAME }}" \
-          #   -var "db_port=${{ secrets.DB_PORT }}" \
-            test.pkr.hcl
+      # - name: Validate Packer Template
+      #   run: |
+      #     # cd packer-template
+      #     # packer validate -var-file=variables.pkrvars.hcl \
+      #     #   -var "db_host=${{ secrets.DB_HOST }}" \
+      #     #   -var "db_user=${{ secrets.DB_USER }}" \
+      #     #   -var "db_password=${{ secrets.Password }}" \
+      #     #   -var "db_name=${{ secrets.DB_NAME }}" \
+      #     #   -var "db_port=${{ secrets.DB_PORT }}" \
+      #       test.pkr.hcl
 
       - name: Build AMI
         run: |
