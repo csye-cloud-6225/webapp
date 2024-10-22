@@ -79,4 +79,4 @@ jobs:
         if: failure()
         run: |
           echo "Packer validation failed. This pull request cannot be merged."
-          exit 1
+          exit 1===
