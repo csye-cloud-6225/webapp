@@ -9,6 +9,7 @@ WorkingDirectory=/opt/webapp
 
 # Directly set the NODE_ENV and PORT environment variables
 Environment=NODE_ENV=production
+EnvironmentFile=/etc/environment
 ExecStart=/usr/bin/node /opt/webapp/index.js
 Restart=always
 StandardOutput=journal
