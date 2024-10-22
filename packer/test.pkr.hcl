@@ -51,7 +51,7 @@ variable "subnet_id" {
 }
 
 source "amazon-ebs" "my-ami" {
-  region          = var.aws_region
+  region          = var.bad
   profile         = "dev_role"
   ami_name        = "MyAMI_Image-{{timestamp}}"
   ami_description = "AMI for CSYE 6225"
