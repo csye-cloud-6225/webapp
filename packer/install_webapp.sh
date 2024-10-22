@@ -7,6 +7,7 @@ log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
+log_message "checking worklow file"
 # Step 1: Update packages and install dependencies
 log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
