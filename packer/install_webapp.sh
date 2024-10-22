@@ -7,18 +7,12 @@ log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
-log_message "Checking workflow file..."
 # Step 1: Update packages and install dependencies
 log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
-sudo apt-get install -y nodejs npm unzip 
+sudo apt-get install -y nodejs npm unzip
 
-log_message "MySQL security configuration completed."
-
-log_message "Contents of /tmp before unzipping:"
-ls -la /tmp
-
-# Step 3: Unzip webapp.zip to /opt/webapp
+# Step 2: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
 sudo unzip /opt/webapp.zip -d /opt/webapp
@@ -27,7 +21,7 @@ sudo unzip /opt/webapp.zip -d /opt/webapp
 log_message "Listing files in /opt/webapp..."
 sudo ls -la /opt/webapp
 
-# Step 4: Navigate to the webapp directory
+# Step 3: Navigate to the webapp directory
 cd /opt/webapp || exit 1
 
 # Check if package.json exists
@@ -36,7 +30,7 @@ if [ ! -f package.json ]; then
     exit 1
 fi
 
-# Step 5: Create a local system user 'csye6225'
+# Step 4: Create a local system user 'csye6225'
 log_message "Creating local system user 'csye6225'..."
 sudo useradd -r -s /usr/sbin/nologin csye6225
 
@@ -44,33 +38,28 @@ sudo useradd -r -s /usr/sbin/nologin csye6225
 sudo mkdir -p /home/csye6225
 sudo chown csye6225:csye6225 /home/csye6225
 
-# Step 6: Set ownership of /opt/webapp to csye6225
+# Step 5: Set ownership of /opt/webapp to csye6225
 log_message "Setting ownership of /opt/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/webapp
 
-# Step 7: Install Node.js dependencies
+# Step 6: Install Node.js dependencies
 log_message "Installing Node.js dependencies..."
 sudo -u csye6225 bash -c 'cd /opt/webapp && npm install'
+sudo npm uninstall bcrypt
+sudo npm install bcrypt
 
-# Step 8: Copy and enable the systemd service file
+# Step 7: Copy and enable the systemd service file
 sudo mv /opt/webapp/my-app.service /etc/systemd/system/my-app.service
 sudo chown root:root /etc/systemd/system/my-app.service
 sudo systemctl daemon-reload
 sudo systemctl enable my-app.service
-sudo systemctl start my-app.service || { log_message "Failed to start service"; exit 1; }
+# sudo systemctl start my-app.service || { log_message "Failed to start service"; exit 1; }
 sudo systemctl status my-app.service
 sudo journalctl -xeu my-app.service
 
-# List contents of /opt/webapp--------
+# List contents of /opt/webapp
 log_message "Contents of /opt/webapp:"
 ls -la /opt/webapp
-
-# Check if .env file exists
-if [ ! -f /opt/webapp/.env ]; then
-    log_message "Warning: .env file not found in /opt/webapp!"
-else
-    log_message ".env file found in /opt/webapp."
-fi
 
 # Log completion message
 log_message "Web application setup complete!"

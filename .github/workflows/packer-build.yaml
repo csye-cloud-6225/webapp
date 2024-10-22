@@ -24,17 +24,10 @@ jobs:
         with:
           version: "1.9.4"
 
-      - name: Create env
-        run: |
-          echo "NODE_ENV=production" >> .env  # Ensure production behavior
-          echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
-          echo "PORT_MAPPING=${{ secrets.PORT_MAPPING }}" >> .env
-
-
       - name: Create webapp.zip
         run: |
           mkdir -p packer-template
-          zip -r webapp.zip . -x ".git" "packer-template/" ".github/" -i ".env"
+          zip -r webapp.zip . -x ".git" "packer-template/" ".github/"
           mv webapp.zip packer-template/
 
       - name: Move necessary files to packer-template
@@ -43,11 +36,19 @@ jobs:
           mv packer/install_webapp.sh packer-template/
           mv packer/test.pkr.hcl packer-template/
 
+      - name: List repository contents
+        run: |
+          echo "Root directory contents:"
+          ls -la
+          echo "packer-template directory contents:"
+          ls -la packer-template
+
       - name: Check necessary files
         run: |
           for file in webapp.zip my-app.service install_webapp.sh test.pkr.hcl; do
             if [ ! -f "packer-template/$file" ]; then
               echo "$file not found in packer-template directory"
+              echo "Current directory structure:"
               find . -type f
               exit 1
             fi
@@ -64,11 +65,16 @@ jobs:
           EOF
 
       - name: Initialize Packer
+        run: packer init ./packer-template/test.pkr.hcl
+
+      - name: Validate Packer Template
         run: |
           cd packer-template
-          packer init test.pkr.hcl
+          packer validate -var-file=variables.pkrvars.hcl \
+            test.pkr.hcl
 
       - name: Build AMI
         run: |
           cd packer-template
-          packer build -var-file=variables.pkrvars.hcl test.pkr.hcl
+          packer build -debug -var-file=variables.pkrvars.hcl \
+            test.pkr.hcl
