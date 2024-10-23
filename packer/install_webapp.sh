@@ -12,6 +12,7 @@ log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip
 
+
 # Step 2: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
 sudo mkdir -p /opt/webapp
