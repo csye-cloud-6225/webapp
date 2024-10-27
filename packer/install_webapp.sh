@@ -58,9 +58,18 @@ sudo systemctl start my-app.service || { log_message "Failed to start service"; 
 sudo systemctl status my-app.service
 sudo journalctl -xeu my-app.service
 
-# List contents of /opt/webapp
-log_message "Contents of /opt/webapp:"
-ls -la /opt/webapp
+# Create necessary directories if not present
+sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+
+# Move the CloudWatch config file to the appropriate path
+sudo mv /opt/webapp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+
+### Step 9: Verify CloudWatch Agent and Application Setup
+log_message "Listing contents of /opt/webapp..."
+
 
 # Log completion message
 log_message "Web application setup complete!"
