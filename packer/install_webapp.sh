@@ -59,11 +59,27 @@ sudo systemctl status my-app.service
 sudo journalctl -xeu my-app.service
 
 # Create necessary directories if not present
+log_message "Creating necessary directories for CloudWatch..."
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
 
-# Move the CloudWatch config file to the appropriate path
-sudo mv /opt/webapp/config/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
+# Move the CloudWatch config file to the appropriate path
+log_message "Moving the CloudWatch config file..."
+sudo mv /opt/webapp/config/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+ls -la /opt/aws/amazon-cloudwatch-agent/bin/
+
+# Step 10: Check for CloudWatch Agent installation
+log_message "Checking for Amazon CloudWatch Agent installation..."
+if ! [ -x "$(command -v /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl)" ]; then
+    log_message "CloudWatch Agent not found. Installing..."
+    # Install the CloudWatch Agent
+    sudo apt-get install -y amazon-cloudwatch-agent
+else
+    log_message "CloudWatch Agent is already installed."
+fi
+
+# Step 11: Start the CloudWatch Agent
+log_message "Starting the CloudWatch Agent..."
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
   -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
