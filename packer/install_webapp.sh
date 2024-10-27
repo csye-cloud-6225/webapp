@@ -66,22 +66,39 @@ sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
 # Move the CloudWatch config file to the appropriate path
 log_message "Moving the CloudWatch config file..."
 sudo mv /opt/webapp/config/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-ls -la /opt/aws/amazon-cloudwatch-agent/bin/
+# ls -la /opt/aws/amazon-cloudwatch-agent/bin/
 
-# Step 10: Check for CloudWatch Agent installation
-log_message "Checking for Amazon CloudWatch Agent installation..."
-if ! [ -x "$(command -v /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl)" ]; then
-    log_message "CloudWatch Agent not found. Installing..."
-    # Install the CloudWatch Agent
-    sudo apt-get install -y amazon-cloudwatch-agent
+# Check if the CloudWatch Agent bin directory exists
+if [ -d "/opt/aws/amazon-cloudwatch-agent/bin/" ]; then
+    log_message "CloudWatch Agent found. Listing contents..."
+    ls -la /opt/aws/amazon-cloudwatch-agent/bin/
+    
+    # Start the CloudWatch Agent (make sure to adjust the path if necessary)
+    log_message "Starting CloudWatch Agent..."
+    sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+        -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 else
-    log_message "CloudWatch Agent is already installed."
+    log_message "CloudWatch Agent not found in /opt/aws/amazon-cloudwatch-agent/bin/. Installing now..."
+
+    # Update package index and install CloudWatch Agent
+    sudo apt-get update
+    sudo apt-get install -y amazon-cloudwatch-agent
+
+    # Check if installation was successful
+    if [ -d "/opt/aws/amazon-cloudwatch-agent/bin/" ]; then
+        log_message "CloudWatch Agent installed successfully. Starting agent..."
+        sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+    else
+        log_message "Failed to install CloudWatch Agent. Please check the installation logs."
+        exit 1
+    fi
 fi
 
-# Step 11: Start the CloudWatch Agent
-log_message "Starting the CloudWatch Agent..."
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+# # Step 11: Start the CloudWatch Agent
+# log_message "Starting the CloudWatch Agent..."
+# sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+#   -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
