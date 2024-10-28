@@ -6,6 +6,8 @@ module.exports = {
     "password": process.env.DB_PASSWORD, // Default for development
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
+    "aws_region":process.env.aws_region,
+    "bucket_name":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   },
@@ -14,6 +16,8 @@ module.exports = {
     "password": process.env.DB_PASSWORD,
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
+    "aws_region":process.env.aws_region,
+    "bucket_name":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   },
@@ -22,6 +26,8 @@ module.exports = {
     "password": process.env.DB_PASSWORD,
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
+    "aws_region":process.env.aws_region,
+    "bucket_name":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   }
