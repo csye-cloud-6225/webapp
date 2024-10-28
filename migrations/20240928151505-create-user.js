@@ -39,6 +39,14 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW // Automatically set when user is created, updated with hooks
       },
+      fileName: {
+        type: Sequelize.STRING, // Add the fileName field
+        allowNull: true, // Optional field
+      },
+      url: {
+        type: Sequelize.STRING, // Add the url field
+        allowNull: true, // Optional field
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
