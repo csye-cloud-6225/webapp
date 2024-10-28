@@ -19,7 +19,7 @@ const s3 = new AWS.S3({
   const upload = multer({
     storage: multerS3({
       s3: s3,
-      bucket_name: process.env.bucket_name,
+      bucket: process.env.bucket_name,
       key: (req, file, cb) => {
         const filename = `profile-pictures/${Date.now()}_${file.originalname}`;
         cb(null, filename);

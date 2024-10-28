@@ -7,7 +7,7 @@ module.exports = {
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
     "aws_region":process.env.aws_region,
-    "bucket_name":process.env.bucket_name,
+    "bucket":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   },
@@ -17,7 +17,7 @@ module.exports = {
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
     "aws_region":process.env.aws_region,
-    "bucket_name":process.env.bucket_name,
+    "bucket":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   },
@@ -27,7 +27,7 @@ module.exports = {
     "database": process.env.DB_NAME,
     "host": process.env.DB_HOST,
     "aws_region":process.env.aws_region,
-    "bucket_name":process.env.bucket_name,
+    "bucket":process.env.bucket_name,
     "dialect": "mysql",
     logging: false
   }
