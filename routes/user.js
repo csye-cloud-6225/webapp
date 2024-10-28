@@ -12,14 +12,14 @@ require('dotenv').config();
 
 // Configure AWS S3
 const s3 = new AWS.S3({
-    region: 'your-region',
+    region: process.env.aws_region,
   });
   
   // Set up Multer to upload to S3
   const upload = multer({
     storage: multerS3({
       s3: s3,
-      bucket: 'your-s3-bucket-name',
+      bucket: process.env.bucket_name,
       key: (req, file, cb) => {
         const filename = `profile-pictures/${Date.now()}_${file.originalname}`;
         cb(null, filename);
@@ -231,40 +231,72 @@ router.post('/user/self/profile-picture', authenticateBasic, upload.single('imag
         if (!user) return res.status(401).json({ error: 'User not found.' }); // User not found
 
         // Save the S3 file URL to the user's profilePicture field
-        user.profilePicture = req.file.location; // Get the URL from the uploaded file
+        user.fileName = req.file.originalname; // Get the URL from the uploaded file
+        user.url = req.file.location; // Get the URL from the uploaded file
+        user.upload_date = new Date(); // Set the upload date
         await user.save(); // Save the updated user info
 
-        return res.status(200).json({ profilePicture: user.profilePicture }); // Return the URL
+        return res.status(200).json({ fileName: user.fileName, url: user.url }); // Return the URL
     } catch (error) {
         console.error('Upload error:', error); // Log the error for debugging
         return res.status(500).json({ error: 'Failed to upload image.' }); // Return server error
     }
 });
 // Delete profile picture from S3
-router.delete('/user/self/profile-picture', async (req, res) => {
+router.delete('/user/self/profile-picture', authenticateBasic, async (req, res) => {
     try {
-      const userId = req.user.id;
-      const user = await User.findByPk(userId);
-  
-      if (!user || !user.profilePicture) return res.status(404).json();
-  
-      // Extract the S3 key from the URL
-      const key = user.profilePicture.split('.amazonaws.com/')[1];
-  
-      // Delete the object from S3
-      await s3.deleteObject({
-        Bucket: 'your-s3-bucket-name',
-        Key: key,
-      }).promise();
-  
-      user.profilePicture = null;
-      await user.save();
-  
-      return res.status(204).send(); // No Content
+        const userId = req.user.id;
+        const user = await User.findByPk(userId);
+
+        if (!user || !user.url) return res.status(404).json({ error: 'Profile picture not found.' }); // User not found or no profile picture
+
+        // Extract the S3 key from the URL
+        const key = user.url.split('.amazonaws.com/')[1];
+
+        // Delete the object from S3
+        await s3.deleteObject({
+            bucket: process.env.bucket_name, // Replace with your S3 bucket name
+            Key: key,
+        }).promise();
+
+        user.fileName = null; // Clear the file name
+        user.url = null; // Clear the URL
+        await user.save(); // Save the updated user info
+
+        return res.status(204).send(); // No Content
     } catch (error) {
-      return res.status(500).json({ error: 'Failed to delete image.' });
+        console.error('Delete error:', error); // Log the error for debugging
+        return res.status(500).json({ error: 'Failed to delete image.' }); // Return server error
     }
-  });
+});
+
+  // GET /user/self/profile-picture - Get user's profile picture
+router.get('/user/self/profile-picture', authenticateBasic, async (req, res) => {
+    try {
+        const userId = req.user.id; // Get user ID from the authenticated user
+        const user = await User.findByPk(userId); // Find the user by ID
+
+        if (!user || !user.profilePicture) {
+            return res.status(404).json({ error: 'Profile picture not found.' }); // User or picture not found
+        }
+
+        const fileUrl = user.profilePicture; // Get the S3 URL of the profile picture
+        const uploadDate = user.upload_date; // Assuming account_updated is the upload date
+        const fileName = fileUrl.split('/').pop(); // Extract the filename from the URL
+
+        return res.status(200).json({
+            file_name: fileName,
+            id: userId, // The user's ID
+            url: fileUrl, // The S3 URL
+            upload_date: user.uploadDate,
+            user_id: userId // User ID
+        });
+    } catch (error) {
+        console.error('Error fetching profile picture:', error); // Log the error for debugging
+        return res.status(500).json({ error: 'Failed to fetch profile picture.' }); // Return server error
+    }
+});
+
 
 // Handle unsupported HTTP methods and return 405 Method Not Allowed
 router.all('/self', (req, res) => {

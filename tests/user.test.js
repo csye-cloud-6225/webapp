@@ -3,12 +3,28 @@ const bcrypt = require('bcrypt');
 const app = require('../index'); // Adjust the path as needed
 const { User } = require('../models'); // Adjust the path as needed
 const sequelize = require('../config/database'); // Adjust the path as needed
+// Add this to the top of your test file
+process.env.bucket_name = 'your-test-bucket-name';
 
 // Mock the database connection
 jest.mock('../config/database', () => ({
   authenticate: jest.fn().mockResolvedValue(),
   sync: jest.fn().mockResolvedValue(),
 }));
+
+// Mock the User model
+jest.mock('../models', () => ({
+  User: {
+    findOne: jest.fn(),
+    findByPk: jest.fn(),
+    create: jest.fn(),
+  },
+}));
+
+// Mock multerS3
+jest.mock('multer-s3', () => jest.fn(() => ({
+  // Mock any necessary methods here
+})));
 
 // Mock the User model
 jest.mock('../models', () => ({
