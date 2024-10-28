@@ -38,10 +38,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW, // Automatically set current date
     },
-    profilePicture: {
-      type: Sequelize.STRING,
+    fileName: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
+    url: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
     
   }, {
     sequelize,

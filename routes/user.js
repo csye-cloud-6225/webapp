@@ -35,49 +35,6 @@ const s3 = new AWS.S3({
     limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
   });
   
-  // Upload profile picture to S3
-  router.post('/user/self/profile-picture', upload.single('image'), async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const user = await User.findByPk(userId);
-  
-      if (!user) return res.status(401).json();
-  
-      // Save the S3 file URL to the user's profilePicture field
-      user.profilePicture = req.file.location;
-      await user.save();
-  
-      return res.status(200).json({ profilePicture: user.profilePicture });
-    } catch (error) {
-      return res.status(500).json({ error: 'Failed to upload image.' });
-    }
-  });
-  
-  // Delete profile picture from S3
-  router.delete('/user/self/profile-picture', async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const user = await User.findByPk(userId);
-  
-      if (!user || !user.profilePicture) return res.status(404).json();
-  
-      // Extract the S3 key from the URL
-      const key = user.profilePicture.split('.amazonaws.com/')[1];
-  
-      // Delete the object from S3
-      await s3.deleteObject({
-        Bucket: 'your-s3-bucket-name',
-        Key: key,
-      }).promise();
-  
-      user.profilePicture = null;
-      await user.save();
-  
-      return res.status(204).send(); // No Content
-    } catch (error) {
-      return res.status(500).json({ error: 'Failed to delete image.' });
-    }
-  });
 // Middleware to check for query parameters
 const checkForQueryParams = (req, res, next) => {
   if (Object.keys(req.query).length > 0) {
@@ -266,6 +223,48 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
         return res.status(500).json();
     }
 });
+router.post('/user/self/profile-picture', authenticateBasic, upload.single('image'), async (req, res) => {
+    try {
+        const userId = req.user.id; // Get user ID from the authenticated user
+        const user = await User.findByPk(userId); // Find the user by ID
+
+        if (!user) return res.status(401).json({ error: 'User not found.' }); // User not found
+
+        // Save the S3 file URL to the user's profilePicture field
+        user.profilePicture = req.file.location; // Get the URL from the uploaded file
+        await user.save(); // Save the updated user info
+
+        return res.status(200).json({ profilePicture: user.profilePicture }); // Return the URL
+    } catch (error) {
+        console.error('Upload error:', error); // Log the error for debugging
+        return res.status(500).json({ error: 'Failed to upload image.' }); // Return server error
+    }
+});
+// Delete profile picture from S3
+router.delete('/user/self/profile-picture', async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await User.findByPk(userId);
+  
+      if (!user || !user.profilePicture) return res.status(404).json();
+  
+      // Extract the S3 key from the URL
+      const key = user.profilePicture.split('.amazonaws.com/')[1];
+  
+      // Delete the object from S3
+      await s3.deleteObject({
+        Bucket: 'your-s3-bucket-name',
+        Key: key,
+      }).promise();
+  
+      user.profilePicture = null;
+      await user.save();
+  
+      return res.status(204).send(); // No Content
+    } catch (error) {
+      return res.status(500).json({ error: 'Failed to delete image.' });
+    }
+  });
 
 // Handle unsupported HTTP methods and return 405 Method Not Allowed
 router.all('/self', (req, res) => {
