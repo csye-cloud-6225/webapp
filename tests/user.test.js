@@ -9,7 +9,6 @@ jest.mock('../config/database', () => ({
   authenticate: jest.fn().mockResolvedValue(),
   sync: jest.fn().mockResolvedValue(),
 }));
-
 // Mock the User model
 jest.mock('../models', () => ({
   User: {

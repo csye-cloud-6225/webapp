@@ -255,7 +255,7 @@ router.delete('/user/self/profile-picture', authenticateBasic, async (req, res) 
 
         // Delete the object from S3
         await s3.deleteObject({
-            Bucket: 'your-s3-bucket-name', // Replace with your S3 bucket name
+            bucket: process.env.bucket_name, // Replace with your S3 bucket name
             Key: key,
         }).promise();
 
