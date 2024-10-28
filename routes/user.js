@@ -12,14 +12,14 @@ require('dotenv').config();
 
 // Configure AWS S3
 const s3 = new AWS.S3({
-    region: 'your-region',
+    region: process.env.aws_region,
   });
   
   // Set up Multer to upload to S3
   const upload = multer({
     storage: multerS3({
       s3: s3,
-      bucket: 'your-s3-bucket-name',
+      bucket: process.env.bucket_name,
       key: (req, file, cb) => {
         const filename = `profile-pictures/${Date.now()}_${file.originalname}`;
         cb(null, filename);
