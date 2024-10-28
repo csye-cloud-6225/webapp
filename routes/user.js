@@ -1,12 +1,83 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
+const AWS = require('aws-sdk');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
 const { User } = require('../models'); // Import the User model
 const authRoutes = require('../routes/auth'); // Import auth routes
 
-// Use the auth routes
-// router.use('/auth', authRoutes);
+// Load environment variables from .env file
+require('dotenv').config();
 
+// Configure AWS S3
+const s3 = new AWS.S3({
+    region: 'your-region',
+  });
+  
+  // Set up Multer to upload to S3
+  const upload = multer({
+    storage: multerS3({
+      s3: s3,
+      bucket: 'your-s3-bucket-name',
+      key: (req, file, cb) => {
+        const filename = `profile-pictures/${Date.now()}_${file.originalname}`;
+        cb(null, filename);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (['image/jpeg', 'image/png', 'image/jpg'].includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type! Only JPEG, PNG, and JPG are allowed.'));
+      }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+  });
+  
+  // Upload profile picture to S3
+  router.post('/user/self/profile-picture', upload.single('image'), async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await User.findByPk(userId);
+  
+      if (!user) return res.status(401).json();
+  
+      // Save the S3 file URL to the user's profilePicture field
+      user.profilePicture = req.file.location;
+      await user.save();
+  
+      return res.status(200).json({ profilePicture: user.profilePicture });
+    } catch (error) {
+      return res.status(500).json({ error: 'Failed to upload image.' });
+    }
+  });
+  
+  // Delete profile picture from S3
+  router.delete('/user/self/profile-picture', async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await User.findByPk(userId);
+  
+      if (!user || !user.profilePicture) return res.status(404).json();
+  
+      // Extract the S3 key from the URL
+      const key = user.profilePicture.split('.amazonaws.com/')[1];
+  
+      // Delete the object from S3
+      await s3.deleteObject({
+        Bucket: 'your-s3-bucket-name',
+        Key: key,
+      }).promise();
+  
+      user.profilePicture = null;
+      await user.save();
+  
+      return res.status(204).send(); // No Content
+    } catch (error) {
+      return res.status(500).json({ error: 'Failed to delete image.' });
+    }
+  });
 // Middleware to check for query parameters
 const checkForQueryParams = (req, res, next) => {
   if (Object.keys(req.query).length > 0) {

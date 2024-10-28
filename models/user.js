@@ -37,7 +37,12 @@ module.exports = (sequelize, DataTypes) => {
     account_updated: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW, // Automatically set current date
-    }
+    },
+    profilePicture: {
+      type: Sequelize.STRING,
+      allowNull: true,
+    },
+    
   }, {
     sequelize,
     modelName: 'User',
