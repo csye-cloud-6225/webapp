@@ -1,49 +1,59 @@
-// migrations/202XXXXXX-create-image.js
-
 'use strict';
-
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('images', {
-            id: {
-                type: Sequelize.UUID,
-                defaultValue: Sequelize.UUIDV4,
-                primaryKey: true,
-                allowNull: false,
-            },
-            userId: { // Updated to match the model field name
-                type: Sequelize.UUID,
-                allowNull: false,
-                // Foreign key constraint
-                references: {
-                    model: 'Users', // Adjusted to match the model reference
-                    key: 'id',
-                },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE',
-            },
-            profilePicUrl: { // Updated field name to match the model
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            originalName: { // Updated field name to match the model
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            createdAt: {
-                type: Sequelize.DATE,
-                allowNull: false,
-                defaultValue: Sequelize.NOW,
-            },
-            updatedAt: {
-                type: Sequelize.DATE,
-                allowNull: false,
-                defaultValue: Sequelize.NOW,
-            },
-        });
-    },
-
-    async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('images');
-    },
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('Users', {
+      id: {
+        allowNull: false,
+        primaryKey: true,
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true, // Ensures email is unique
+        validate: {
+          isEmail: true // Ensures valid email format
+        }
+      },
+      firstName: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      lastName: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      password: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      account_created: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.NOW // Automatically set when user is created
+      },
+      account_updated: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.NOW // Automatically set when user is created, updated with hooks
+      },
+      // Removed profilePicUrl fields since images are managed in a separate table
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+      }
+    });
+  },
+  
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('Users');
+  }
 };

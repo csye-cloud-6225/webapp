@@ -1,59 +1,133 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const sequelize = require('./config/database'); // Database connection setup
-const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
-const userRoutes = require('./routes/user'); // Import user routes
+'use strict';
+const bcrypt = require('bcrypt'); // Add bcrypt for password hashing
+const { Model } = require('sequelize');
 
-const app = express();
-const port = 8080;
-
-dotenv.config(); // Load environment variables from .env file
-
-// Use express.json() to handle JSON payloads
-app.use(express.json());
-
-// Sync database schema with models
-sequelize.sync({ alter: true })
-  .then(() => {
-    console.log('Database synchronized successfully');
-  })
-  .catch((error) => {
-    console.error('Error synchronizing the database:', error);
-  });
-
-// Middleware to check DB connection for each request
-const checkDbConnection = async (req, res, next) => {
-  try {
-    await sequelize.authenticate(); // Verifies database connection
-    next(); 
-  } catch (error) {
-    return res.status(503).send(); // Return 503 if the database connection fails
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    static associate(models) {
+      // A user can have only one image (profile picture)
+      User.hasOne(models.Image, { // Change to hasOne for one profile picture
+        foreignKey: 'userId', // Foreign key in the Image table
+        as: 'profilePicture', // Alias for the association
+        onDelete: 'CASCADE', // Delete the profile picture if the user is deleted
+      });
+    }
   }
-};
 
-// Apply the database connection check before handling routes
-app.use(checkDbConnection);
+  User.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Auto-generate UUIDs
+      primaryKey: true, // Set as primary key
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true, // Ensure email is unique
+      validate: {
+        isEmail: true, // Ensure email format is valid
+      },
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    account_created: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW, // Automatically set current date
+    },
+    account_updated: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW, // Automatically set current date
+    },
+  }, {
+    sequelize,
+    modelName: 'User',
+    tableName: 'Users',
 
-// API endpoint routes
-app.use('/healthz', healthzRoutes);
-app.use('/v1', userRoutes);
-
-// Handle unsupported HTTP methods for the /healthz endpoint
-app.all('/healthz', (req, res) => {
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.status(405).send(); // Return 405 for unsupported methods
-});
-
-// Custom 404 handler for unknown routes
-app.use((req, res) => {
-  res.status(404).json(); // Return a JSON error response for unmatched routes
-});
-
-// Start the server and listen on the specified port if this is the main module
-if (require.main === module) {
-  app.listen(port, () => {
-    console.log(`Server is up and running at http://localhost:${port}`);
+    hooks: {
+      beforeCreate: async (user, options) => {
+        // Hash password before creating the user
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      },
+      beforeUpdate: async (user, options) => {
+        if (user.changed('password')) {
+          // Hash password before updating if it was changed
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
+        }
+        // Update the account_updated timestamp
+        user.account_updated = new Date();
+      }
+    }
   });
-}
 
-module.exports = app; // Export the app for testing
+  // Define the Image model here
+  class Image extends Model {
+    static associate(models) {
+      // Each image belongs to a single user
+      Image.belongsTo(models.User, {
+        foreignKey: 'userId', // Foreign key in the User table
+        as: 'user', // Optional alias for easier access
+      });
+    }
+  }
+
+  Image.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+      allowNull: false,
+    },
+    userId: {
+      type: DataTypes.UUID, // Foreign key to match the User table
+      allowNull: false,
+      references: {
+        model: 'Users', // Ensure this matches the casing of your Users table
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+    profilePicUrl: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    profilePicOriginalName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    profilePicUploadedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+      allowNull: false,
+    },
+  }, {
+    sequelize,
+    modelName: 'Image',
+    tableName: 'images',
+  });
+
+  return { User, Image };
+};

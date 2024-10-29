@@ -1,4 +1,3 @@
-// models/image.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Adjust the path as necessary
 
@@ -15,24 +14,21 @@ Image.init({
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-            model: 'Users', // Assuming 'Users' is the name of your User model table
+            model: 'Users', // Ensure this matches the casing of your Users table
             key: 'id',
         },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
     },
-    profilePicUrl: {
+    profilePicUrl: { // Using profilePicUrl for consistency
         type: DataTypes.STRING,
         allowNull: false,
     },
-    originalName: {
+    profilePicOriginalName: { // Keeping this field for the original file name
         type: DataTypes.STRING,
         allowNull: false,
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
+    profilePicUploadedAt: { // Keeping this field for the upload date
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
@@ -42,6 +38,7 @@ Image.init({
     modelName: 'Image',
     tableName: 'images',
 });
-Image.sync();
+
+// Removed Image.sync(), as migrations should manage the creation of tables
 
 module.exports = Image;

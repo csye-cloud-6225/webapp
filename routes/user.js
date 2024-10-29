@@ -48,7 +48,7 @@ const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
 }
 
 // Allow DELETE requests to /user/self/profile-picture without authentication
-if (req.method === 'DELETE' && req.originalUrl === '/user/self/profile-picture') {
+if (req.method === 'DELETE' && req.originalUrl === '/user/self/pic') {
     return next(); // Allow this specific DELETE request
 }
 
@@ -249,7 +249,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
     try {
       const data = await s3.upload(uploadParams).promise();
       const imageUrl = data.Location;
-      
+
   
       // Update user with profile picture URL
       const user = await User.findByPk(userId);
@@ -268,7 +268,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
   });
   
 // Delete profile picture from S3
-router.delete('/user/self/profile-picture', authenticateBasic, async (req, res) => {
+router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
     try {
         const userId = req.user.id;
         const user = await User.findByPk(userId);
@@ -296,7 +296,7 @@ router.delete('/user/self/profile-picture', authenticateBasic, async (req, res) 
 });
 
   // GET /user/self/profile-picture - Get user's profile picture
-router.get('/user/self/profile-picture', authenticateBasic, async (req, res) => {
+router.get('/user/self/pic', authenticateBasic, async (req, res) => {
     try {
         const userId = req.user.id; // Get user ID from the authenticated user
         const user = await User.findByPk(userId); // Find the user by ID
