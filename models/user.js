@@ -1,6 +1,6 @@
 'use strict';
-const { Model } = require('sequelize');
-
+const { Model, DataTypes } = require('sequelize');
+const Sequelize = require('../config/database')
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
