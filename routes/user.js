@@ -41,7 +41,21 @@ const checkForQueryParams = (req, res, next) => {
 const saltRounds = 10; // Define salt rounds globally
 
 const authenticateBasic = async (req, res, next) => {
-  const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS', 'DELETE'];
+const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
+  // Check if the method is unsupported
+  if (unsupportedMethods.includes(req.method)) {
+    return res.sendStatus(405); // Method Not Allowed
+}
+
+// Allow DELETE requests to /user/self/profile-picture without authentication
+if (req.method === 'DELETE' && req.originalUrl === '/user/self/profile-picture') {
+    return next(); // Allow this specific DELETE request
+}
+
+// Reject DELETE requests to any other routes
+if (req.method === 'DELETE') {
+    return res.sendStatus(403); // Forbidden for all other DELETE requests
+}
 
   if (unsupportedMethods.includes(req.method)) {
       return res.sendStatus(405); // Method Not Allowed
@@ -235,6 +249,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
     try {
       const data = await s3.upload(uploadParams).promise();
       const imageUrl = data.Location;
+      
   
       // Update user with profile picture URL
       const user = await User.findByPk(userId);

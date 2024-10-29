@@ -1,4 +1,4 @@
-// migrations/202XXXXXX-create-image.js
+// migrations/202XXXXXX-create-image-table.js
 
 'use strict';
 
@@ -11,34 +11,39 @@ module.exports = {
                 primaryKey: true,
                 allowNull: false,
             },
-            userId: { // Updated to match the model field name
+            file_name: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
+            url: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
+            upload_date: {
+                type: Sequelize.DATE,
+                allowNull: false,
+                defaultValue: Sequelize.NOW,
+            },
+            user_id: {
                 type: Sequelize.UUID,
                 allowNull: false,
-                // Foreign key constraint
+                // Add foreign key constraint if necessary
                 references: {
-                    model: 'Users', // Adjusted to match the model reference
+                    model: 'users', // The name of the user table
                     key: 'id',
                 },
                 onUpdate: 'CASCADE',
                 onDelete: 'CASCADE',
             },
-            profilePicUrl: { // Updated field name to match the model
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
-            originalName: { // Updated field name to match the model
-                type: Sequelize.STRING,
-                allowNull: false,
-            },
             createdAt: {
                 type: Sequelize.DATE,
-                allowNull: false,
                 defaultValue: Sequelize.NOW,
+                allowNull: false,
             },
             updatedAt: {
                 type: Sequelize.DATE,
-                allowNull: false,
                 defaultValue: Sequelize.NOW,
+                allowNull: false,
             },
         });
     },
