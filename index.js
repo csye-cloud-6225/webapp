@@ -4,6 +4,7 @@ const sequelize = require('./config/database'); // Database connection setup
 const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
 const userRoutes = require('./routes/user'); // Import user routes
 
+
 const app = express();
 const port = 8080;
 

@@ -1,81 +1,43 @@
 'use strict';
-const bcrypt = require('bcrypt'); // Add bcrypt for password hashing
-const { Model } = require('sequelize');
-
+const { Model, DataTypes } = require('sequelize');
+const Sequelize = require('../config/database')
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // Define association here
+      // Each user has one image
+      User.hasOne(models.Image, {
+        foreignKey: 'userId', // Foreign key in the Image table
+        as: 'image', // Optional alias for easier access
+      });
     }
   }
 
   User.init({
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true, // Ensure email is unique
-      validate: {
-        isEmail: true, // Ensure email format is valid
-      },
-    },
-    firstName: {
-      type: DataTypes.STRING,
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
       allowNull: false,
     },
-    lastName: {
+    username: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    account_created: {
+    // Add any additional fields for the User model here
+    createdAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, // Automatically set current date
+      defaultValue: DataTypes.NOW,
+      allowNull: false,
     },
-    account_updated: {
+    updatedAt: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW, // Automatically set current date
+      defaultValue: DataTypes.NOW,
+      allowNull: false,
     },
-    profilePicUrl: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    profilePicUploadedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    profilePicOriginalName: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    
   }, {
     sequelize,
     modelName: 'User',
-    tableName: 'Users',
-
-    // Use hooks to update account_updated field on every update
-    hooks: {
-      beforeCreate: async (user, options) => {
-
-        // Hash password before creating the user
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      },
-      beforeUpdate: async (user, options) => {
-        if (user.changed('password')) {
-
-
-          // Hash password before updating if it was changed
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-        // Update the account_updated timestamp
-        user.account_updated = new Date();
-      }
-    }
+    tableName: 'users', // Ensure this matches your actual table name
   });
 
   return User;

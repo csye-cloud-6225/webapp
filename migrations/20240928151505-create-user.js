@@ -5,9 +5,9 @@ module.exports = {
     await queryInterface.createTable('Users', {
       id: {
         allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
       },
       email: {
         type: Sequelize.STRING,
@@ -39,18 +39,7 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW // Automatically set when user is created, updated with hooks
       },
-      profilePicUrl: {
-        type: Sequelize.STRING, // Add the fileName field
-        allowNull: true, // Optional field
-      },
-      profilePicUploadedAt: {
-        type: Sequelize.DATE, // Add the url field
-        allowNull: true, // Optional field
-      },
-      profilePicOriginalName: {
-        type: DataTypes.STRING,
-        allowNull: true, // Allow null if no profile picture is uploaded
-      },
+      // Removed profilePicUrl fields since images are managed in a separate table
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
