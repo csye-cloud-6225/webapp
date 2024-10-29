@@ -1,29 +1,47 @@
 'use strict';
-const { Model, DataTypes } = require('sequelize');
-const Sequelize = require('../config/database')
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
+  class Image extends Model {
     static associate(models) {
-      // Each user has one image
-      User.hasOne(models.Image, {
-        foreignKey: 'userId', // Foreign key in the Image table
-        as: 'image', // Optional alias for easier access
+      // Each image belongs to a single user
+      Image.belongsTo(models.User, {
+        foreignKey: 'userId', // This is the foreign key
+        as: 'user', // Optional alias for easier access
       });
     }
   }
 
-  User.init({
+  Image.init({
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },
-    username: {
+    userId: {
+      type: DataTypes.UUID, // Foreign key to match the User table
+      allowNull: false,
+      references: {
+        model: 'users', // Ensure this matches the casing of your Users table
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+    profilePicUrl: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    // Add any additional fields for the User model here
+    profilePicOriginalName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    profilePicUploadedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -36,9 +54,9 @@ module.exports = (sequelize, DataTypes) => {
     },
   }, {
     sequelize,
-    modelName: 'User',
-    tableName: 'users', // Ensure this matches your actual table name
+    modelName: 'Image',
+    tableName: 'images',
   });
 
-  return User;
+  return Image;
 };
