@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const fs = require('fs');
 const express = require('express');
 const dotenv = require('dotenv');
 const sequelize = require('./config/database'); // Database connection setup
