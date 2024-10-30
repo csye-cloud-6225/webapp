@@ -4,9 +4,11 @@ const dotenv = require('dotenv');
 const sequelize = require('./config/database'); // Database connection setup
 const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
 const userRoutes = require('./routes/user'); // Import user routes
+const path = require('path');
 
 const app = express();
 const port = 8080;
+dotenv.config(); // Load environment variables from .env file
 // Set up CloudWatch and region configuration
 AWS.config.update({ region: process.env.AWS_REGION || 'us-east-1' });
 const cloudwatch = new AWS.CloudWatch();
@@ -36,7 +38,7 @@ app.use((req, res, next) => {
     next();
 });
 
-dotenv.config(); // Load environment variables from .env file
+
 
 // Use express.json() to handle JSON payloads
 app.use(express.json());
