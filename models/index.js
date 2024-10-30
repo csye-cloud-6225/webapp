@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const Sequelize= require('sequelize'); // Import Sequelize and DataTypes
+const {Sequelize, DataTypes}= require('sequelize'); // Import Sequelize and DataTypes
 const process = require('process');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
