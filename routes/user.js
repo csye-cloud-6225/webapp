@@ -234,38 +234,48 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
 });
 // POST /v1/user/self/pic - Upload profile picture
 router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), async (req, res) => {
-    const userId = req.user.id;
-  
-    const uploadParams = {
-      Bucket: bucket_name,
-      Key: `user-profile-pics/${userId}-${Date.now()}-${req.file.originalname}`,  // Unique key for each file
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      Metadata: {
-        userId: String(userId),
-      },
-    };
-  
-    try {
+  const userId = req.user.id;
+
+  try {
+      // Check if the user already has a profile picture
+      const existingPicture = await User.findOne({ where: { id: userId, profilePicUrl: { [Op.ne]: null } } });
+      if (existingPicture) {
+          // If the user already has a profile picture, return 400 Bad Request
+          return res.status(400).json({ error: 'Profile picture already exists. Delete it before uploading a new one.' });
+      }
+
+      // Generate a unique file name for the S3 object
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+      const uploadParams = {
+          Bucket: bucket_name,
+          Key: `user-profile-pics/${userId}/${fileName}`,  // Unique key for each file
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype,
+          Metadata: {
+              userId: String(userId),
+          },
+      };
+
+      // Upload the image to S3
       const data = await s3.upload(uploadParams).promise();
       const imageUrl = data.Location;
 
-  
       // Update user with profile picture URL
       const user = await User.findByPk(userId);
       user.profilePicUrl = imageUrl;
       user.profilePicOriginalName = req.file.originalname; // Save original name
       await user.save();
-  
+
       res.status(201).json({
-        message: 'Profile picture uploaded successfully',
-        imageUrl,
+          message: 'Profile picture uploaded successfully',
+          imageUrl,
       });
-    } catch (error) {
+  } catch (error) {
       console.error('Error uploading profile picture:', error);
       res.status(500).json({ error: 'Error uploading profile picture' });
-    }
-  });
+  }
+});
+
   
 // Delete profile picture from S3
 router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
