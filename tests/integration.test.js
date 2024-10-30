@@ -3,27 +3,32 @@ const app = require('../index'); // Adjust this path if necessary
 const { User } = require('../models'); // Adjust this path if necessary
 const sequelize = require('../config/database'); // Adjust this path if necessary
 
-// Mock AWS SDK and multer-s3
-jest.mock('multer-s3', () => {
-  return jest.fn(() => {
-    return {
-      _handleFile: jest.fn((req, file, cb) => cb(null, { location: 'mocked-url' })),
-      _removeFile: jest.fn((req, file, cb) => cb(null)),
-    };
-  });
-});
-
+// Mock AWS SDK, including CloudWatch and S3
 jest.mock('aws-sdk', () => {
   const uploadMock = jest.fn((params, callback) => callback(null, { Location: 'mocked-url' }));
+
   return {
     S3: jest.fn(() => ({
       upload: uploadMock,
-      // Add more methods as necessary to cover your application's needs
       getObject: jest.fn((params, callback) => callback(null, { Body: Buffer.from('mocked data') })),
       deleteObject: jest.fn((params, callback) => callback(null)),
     })),
+    CloudWatch: jest.fn(() => ({
+      putMetricData: jest.fn((params, callback) => callback(null, {})),
+    })),
+    config: {
+      update: jest.fn(), // Mock AWS.config.update method to prevent region error
+    },
   };
 });
+
+jest.mock('multer-s3', () => {
+  return jest.fn(() => ({
+    _handleFile: jest.fn((req, file, cb) => cb(null, { location: 'mocked-url' })),
+    _removeFile: jest.fn((req, file, cb) => cb(null)),
+  }));
+});
+
 
 describe('User API Integration Tests', () => {
   beforeAll(async () => {
