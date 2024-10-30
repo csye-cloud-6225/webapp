@@ -19,7 +19,7 @@ if (!fs.existsSync(logFilePath)) fs.writeFileSync(logFilePath, ''); // Create an
 // Setup logging to app.log
 const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 const logToFile = (message) => {
-    const logMessage = ${new Date().toISOString()} - ${message}\n;
+    const logMessage = `${new Date().toISOString()} - ${message}\n`;
     logStream.write(logMessage);
     console.log(logMessage); // Optional: also log to console
 };
