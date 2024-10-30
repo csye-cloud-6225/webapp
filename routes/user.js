@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt'); // Import bcrypt for password hashing
 const AWS = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const { User } = require('../models'); // Import the User model
+const { User,Image } = require('../models'); // Import the User model
 const authRoutes = require('../routes/auth'); // Import auth routes
 
 // Load environment variables from .env file
@@ -37,6 +37,16 @@ const checkForQueryParams = (req, res, next) => {
   }
   next();
 };
+// Middleware to check DELETE method
+const restrictDeleteOnSelf = (req, res, next) => {
+  if (req.method === 'DELETE' && req.originalUrl ==='/v1/user/self') {
+    return res.sendStatus(405); // Method Not Allowed
+  }
+  next(); // Proceed to the next middleware/route handler
+};
+
+// Apply the middleware to the /user/self route
+router.use('/user/self', restrictDeleteOnSelf);
 
 const saltRounds = 10; // Define salt rounds globally
 
@@ -48,14 +58,16 @@ const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
 }
 
 // Allow DELETE requests to /user/self/profile-picture without authentication
-if (req.method === 'DELETE' && req.originalUrl === '/user/self/pic') {
-    return next(); // Allow this specific DELETE request
-}
+//if (req.method === 'DELETE' && req.originalUrl === '/user/self/pic') {
+//   console.log('req.orginalurl', req.originalUrl);
+//   console.log('allowing delete req to /user/self/pic');
+//    return next(); // Allow this specific DELETE request
+//}
 
 // Reject DELETE requests to any other routes
-if (req.method === 'DELETE') {
-    return res.sendStatus(403); // Forbidden for all other DELETE requests
-}
+//if (req.method === 'DELETE') {
+//    return res.sendStatus(403); // Forbidden for all other DELETE requests
+//}
 
   if (unsupportedMethods.includes(req.method)) {
       return res.sendStatus(405); // Method Not Allowed
@@ -235,10 +247,12 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
 // POST /v1/user/self/pic - Upload profile picture
 router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), async (req, res) => {
   const userId = req.user.id;
-
+  console.log('user is is ',userId);
+  
   try {
+        const user = await User.findByPk(userId);
       // Check if the user already has a profile picture
-      const existingPicture = await User.findOne({ where: { id: userId, profilePicUrl: { [Op.ne]: null } } });
+      const existingPicture = await Image.findOne({ where: { userId} });
       if (existingPicture) {
           // If the user already has a profile picture, return 400 Bad Request
           return res.status(400).json({ error: 'Profile picture already exists. Delete it before uploading a new one.' });
@@ -246,6 +260,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
 
       // Generate a unique file name for the S3 object
       const fileName = `${Date.now()}-${req.file.originalname}`;
+      console.log('originalname is this below ',req.file.originalname); 
       const uploadParams = {
           Bucket: bucket_name,
           Key: `user-profile-pics/${userId}/${fileName}`,  // Unique key for each file
@@ -259,15 +274,30 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
       // Upload the image to S3
       const data = await s3.upload(uploadParams).promise();
       const imageUrl = data.Location;
-
+      //create a new record
+      const newImage = await Image.create({
+        userId,
+        profilePicUrl: imageUrl,
+        key: uploadParams.Key,
+        profilePicOriginalName: req.file.originalname,
+        profilePicUploadedAt: new Date(),
+        metadata: {
+          profilePicOriginalName: req.file.originalname,
+          content_type: req.file.mimetype,
+          upload_date: new Date().toISOString(),
+        },
+      });
+      await user.setProfileImage(newImage);
       // Update user with profile picture URL
-      const user = await User.findByPk(userId);
       user.profilePicUrl = imageUrl;
       user.profilePicOriginalName = req.file.originalname; // Save original name
       await user.save();
-
+      const profilePicOriginalName = req.file.originalname;
       res.status(201).json({
           message: 'Profile picture uploaded successfully',
+          id: newImage.id,
+          user_id: userId,
+          profilePicOriginalName,
           imageUrl,
       });
   } catch (error) {
@@ -276,63 +306,48 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
   }
 });
 
-  
-// Delete profile picture from S3
-router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const user = await User.findByPk(userId);
-
-        if (!user || !user.profilePicUrlurl) return res.status(404).json({ error: 'Profile picture not found.' }); // User not found or no profile picture
-
-        // Extract the S3 key from the URL
-        const fileKey = user.profilePicUrl.split(`${bucketName}/`)[1];
-        const deleteParams = {
-            Bucket: bucket_name,
-            Key: fileKey,
-        };
-        await s3.deleteObject(deleteParams).promise();
-
-        //Remove the profile url from user's record
-        user.profilePicUrl = null;
-        await user.save();
-        return res.status(204).send(); // Return 204 No Content
-    } catch (error){
-        console.error('Error deleting profile picture:', error);
-        res.status(500).json({ error: 'Error deleting profile picture' });
-    }
-
-
-});
-
-  // GET /user/self/profile-picture - Get user's profile picture
-router.get('/user/self/pic', authenticateBasic, async (req, res) => {
-    try {
-        const userId = req.user.id; // Get user ID from the authenticated user
-        const user = await User.findByPk(userId); // Find the user by ID
-
-        if (!user || !user.profilePicture) {
-            return res.status(404).json({ error: 'Profile picture not found.' }); // User or picture not found
+//GET
+router.get('/user/self/pic',authenticateBasic, async(req,res) => {
+        try{
+          const profilePicture = await Image.findOne({ where: { userId: req.user.id}});
+          if(!profilePicture){
+             return res.status(404).json({error:'profile picture not found'});
+          }
+          res.status(200).json({
+            profilePicUrl: profilePicture.profilePicUrl,
+            profilePicMetadata: profilePicture.metadata,
+            message: 'Profile picture retrieved successfully' });
+        }catch(error){
+          console.log(error, 'errro retrieving profile pic');
+          res.status(500).json({error: 'error retrieving profile pic'});
         }
+}); 
 
-        // const fileUrl = user.profilePicture; // Get the S3 URL of the profile picture
-        // const uploadDate = user.upload_date; // Assuming account_updated is the upload date
-        // const fileName = fileUrl.split('/').pop(); // Extract the filename from the URL
-
-        return res.status(200).json({
-            profilePicUrl: user.profilePicUrl,
-            message: 'profile pic retrieved successfully',
-        });
-    } catch (error) {
-        console.error('Error fetching profile picture:', error); // Log the error for debugging
-        return res.status(500).json({ error: 'Failed to fetch profile picture.' }); // Return server error
+// DELETE /v1/user/self/pic - Delete profile picture
+router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
+  try {
+    const profilePicture = await Image.findOne({ where: { userId: req.user.id } });
+    if (!profilePicture) {
+      return res.status(404).json({ error: 'Profile picture not found' });
     }
+    console.log('deleting key: ',profilePicture.key);
+    const deleteParams = {
+      Bucket: bucket_name,
+      Key: profilePicture.key,
+    };
+
+    await s3.deleteObject(deleteParams).promise();
+
+    // Remove the profile picture record from the database
+    await profilePicture.destroy();
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting profile picture:', error);
+    res.status(500).json({ error: 'Error deleting profile picture' });
+  }
 });
 
 
-// Handle unsupported HTTP methods and return 405 Method Not Allowed
-router.all('/self', (req, res) => {
-  return res.status(405).json(); // Method Not Allowed
-});
 
 module.exports = router;

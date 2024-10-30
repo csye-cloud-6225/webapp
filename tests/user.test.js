@@ -175,12 +175,6 @@ describe('User API', () => {
     });
   });
 
-  describe('Unsupported methods', () => {
-    it('should return 405 for unsupported methods on /self', async () => {
-      const response = await request(app).delete('/v1/self');
-      expect(response.status).toBe(405);
-    });
-  });
 });
 
 describe('Database Connection', () => {

@@ -7,7 +7,7 @@ module.exports = (sequelize) => {
     static associate(models) {
       // Define association here
       // A user can have multiple images
-      User.hasOne(models.Image, { foreignKey: 'userId', as: 'profilePic' }); // Optional alias for easier access
+      User.hasOne(models.Image, { foreignKey: 'userId', as: 'profileImage' }); // Optional alias for easier access
     }
   }
   
