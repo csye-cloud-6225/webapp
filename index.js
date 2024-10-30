@@ -3,7 +3,9 @@ const dotenv = require('dotenv');
 const sequelize = require('./config/database'); // Database connection setup
 const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
 const userRoutes = require('./routes/user'); // Import user routes
-
+// Import the logger and metrics
+const logger = require('../webapp/logger'); // Importing logger module
+const metrics = require('../webapp/metrics'); // Importing metrics module
 
 const app = express();
 const port = 8080;
@@ -16,9 +18,11 @@ app.use(express.json());
 // Sync database schema with models
 sequelize.sync({ alter: true })
   .then(() => {
+    logger.info('Database synchronized successfully');
     console.log('Database synchronized successfully');
   })
   .catch((error) => {
+    logger.error('Error synchronizing the database:', error);
     console.error('Error synchronizing the database:', error);
   });
 
