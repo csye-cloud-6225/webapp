@@ -10,26 +10,6 @@ const port = 8080;
 // Set up CloudWatch and region configuration
 AWS.config.update({ region: process.env.AWS_REGION || 'us-east-1' });
 const cloudwatch = new AWS.CloudWatch();
-// Ensure logs directory and app.log file exist
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir);
-const logFilePath = path.join(logsDir, 'app.log');
-if (!fs.existsSync(logFilePath)) fs.writeFileSync(logFilePath, ''); // Create an empty log file if it doesn't exist
-
-// Setup logging to app.log
-const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
-const logToFile = (message) => {
-    const logMessage = `${new Date().toISOString()} - ${message}\n`;
-    logStream.write(logMessage);
-    console.log(logMessage); // Optional: also log to console
-};
-
-// Set up CloudWatch configuration
-AWS.config.update({ region: process.env.AWS_REGION || 'us-east-1' });
-const cloudwatch = new AWS.CloudWatch();
-
-// Initialize StatsD client only if not in test environment
-const statsdClient = process.env.NODE_ENV !== 'test' ? new StatsD({ host: 'localhost', port: 8125 }) : { timing: () => {}, increment: () => {} };
 
 // Ensure logs directory and app.log file exist
 const logsDir = path.join(__dirname, 'logs');
