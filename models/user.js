@@ -10,6 +10,7 @@ module.exports = (sequelize) => {
       User.hasOne(models.Image, { foreignKey: 'userId', as: 'profilePic' }); // Optional alias for easier access
     }
   }
+  
 
   User.init({
     id: {
