@@ -13,9 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         unique: true, // Ensures email is unique
-        validate: {
-          isEmail: true // Ensures valid email format
-        }
+        
       },
       firstName: {
         type: Sequelize.STRING,
