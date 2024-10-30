@@ -22,6 +22,9 @@ jest.mock('aws-sdk', () => {
       getObject: jest.fn((params, callback) => callback(null, { Body: Buffer.from('mocked data') })),
       deleteObject: jest.fn((params, callback) => callback(null)),
     })),
+    config: {
+      update: jest.fn(), // Mock AWS config.update method
+    },
   };
 });
 
