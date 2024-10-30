@@ -4,8 +4,8 @@ const sequelize = require('./config/database'); // Database connection setup
 const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
 const userRoutes = require('./routes/user'); // Import user routes
 // Import the logger and metrics
-const logger = require('../webapp/logger'); // Importing logger module
-const metrics = require('../webapp/metrics'); // Importing metrics module
+const logger = require('./logs/logger'); // Importing logger module
+const metrics = require('./metrics'); // Importing metrics module
 
 const app = express();
 const port = 8080;
