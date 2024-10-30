@@ -28,13 +28,13 @@ const logToFile = (message) => {
     console.log(logMessage); // Optional: also log to console
 };
 
-// Middleware to track API response time and log to CloudWatch and StatsD
+// Middleware to track API response time and log to CloudWatch
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
         logToFile(`Request to ${req.method} ${req.path} took ${duration} ms`);
-        statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}`, duration);
+  
     });
     next();
 });
