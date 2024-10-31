@@ -20,11 +20,20 @@ jest.mock('../models', () => ({
     create: jest.fn(),
   },
 }));
-// Mock node-statsd unconditionally to prevent errors when the module is not found
-jest.mock('node-statsd', () => ({
-  increment: jest.fn(),
-  timing: jest.fn(),
-}));
+let StatsD;
+
+try {
+  StatsD = require('node-statsd');
+} catch (error) {
+  // Mock the StatsD module if it doesn't exist
+  StatsD = {
+    increment: jest.fn(),
+    timing: jest.fn(),
+  };
+}
+
+jest.mock('node-statsd', () => StatsD);
+
 // Mock multerS3
 jest.mock('multer-s3', () => jest.fn(() => ({
   // Mock any necessary methods here
