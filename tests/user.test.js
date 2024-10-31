@@ -21,10 +21,13 @@ jest.mock('../models', () => ({
   },
 }));
 // Mock node-statsd unconditionally to prevent errors when the module is not found
-jest.mock('node-statsd', () => ({
-  increment: jest.fn(),
-  timing: jest.fn(),
-}));
+jest.mock('node-statsd', () => {
+  return jest.fn().mockImplementation(() => ({
+    increment: jest.fn(),
+    timing: jest.fn(),
+  }));
+});
+
 // Mock multerS3
 jest.mock('multer-s3', () => jest.fn(() => ({
   // Mock any necessary methods here
