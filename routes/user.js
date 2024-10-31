@@ -143,6 +143,16 @@ const checkForQueryParams = (req, res, next) => {
   }
   next();
 };
+// Middleware to handle 405 Method Not Allowed for specific routes
+const methodNotAllowed = (req, res, next) => {
+  if (req.method === 'PUT' && req.originalUrl === '/v1/user/self/pic') {
+    return res.sendStatus(405); // Method Not Allowed
+  }
+  next();
+};
+
+// Apply the middleware to /user/self/pic route
+router.use('/user/self/pic', methodNotAllowed);
 // Middleware to check DELETE method
 const restrictDeleteOnSelf = (req, res, next) => {
   if (req.method === 'DELETE' && req.originalUrl ==='/v1/user/self') {
