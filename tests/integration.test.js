@@ -28,14 +28,6 @@ jest.mock('multer-s3', () => {
     _removeFile: jest.fn((req, file, cb) => cb(null)),
   }));
 });
-// Check if the module exists before mocking it
-let StatsD;
-try {
-  StatsD = require('node-statsd');
-} catch (e) {
-  // Module does not exist, handle accordingly
-}
-
 // Mock node-statsd
 jest.mock('node-statsd', () => {
   return jest.fn().mockImplementation(() => ({
@@ -43,7 +35,6 @@ jest.mock('node-statsd', () => {
     timing: jest.fn(),
   }));
 });
-
 
 describe('User API Integration Tests', () => {
   beforeAll(async () => {
