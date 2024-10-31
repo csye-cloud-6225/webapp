@@ -58,8 +58,8 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        logMetric(`API-${req.method}-${req.path}, duration`);
-        statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}, duration`);
+        logMetric(`API-${req.method}-${req.path}`, duration);
+        statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}`, duration);
         logToFile(`Request to ${req.method} ${req.path} took ${duration} ms`);
   
     });

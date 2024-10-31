@@ -60,8 +60,8 @@ const timedOperation = async (operation, metricPrefix) => {
   const start = Date.now();
   const result = await operation();
   const duration = Date.now() - start;
-  logMetric(`${metricPrefix}_ExecutionTime, duration`);
-  statsdClient.timing(`${metricPrefix}.execution_time, duration`);
+  logMetric(`${metricPrefix}_ExecutionTime`, duration);
+  statsdClient.timing(`${metricPrefix}.execution_time`, duration);
   return result;
 };
 
@@ -71,8 +71,8 @@ router.use((req, res, next) => {
   statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
   res.on('finish', () => {
     const duration = Date.now() - start;
-    logMetric(`API_${req.method}_${req.path}_ExecutionTime, duration`);
-    statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.execution_time, duration`);
+    logMetric(`API_${req.method}_${req.path}_ExecutionTime`, duration);
+    statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.execution_time`, duration);
   });
   next();
 });
@@ -80,8 +80,8 @@ const timedS3Operation = async (operation, params) => {
   const start = Date.now();
   const result = await s3[operation](params).promise();
   const duration = Date.now() - start;
-  logMetric(`S3_${operation}_ExecutionTime, duration`);  // Logs to CloudWatch
-  statsdClient.timing(`s3.${operation}.execution_time, duration`);  // Logs to StatsD
+  logMetric(`S3_${operation}_ExecutionTime`, duration);  // Logs to CloudWatch
+  statsdClient.timing(`s3.${operation}.execution_time`, duration);  // Logs to StatsD
   return result;
 };
 // Middleware to check for query parameters
