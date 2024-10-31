@@ -6,14 +6,18 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const { User,Image } = require('../models'); // Import the User model
 const authRoutes = require('../routes/auth'); // Import auth routes
-
+const StatsD = require('node-statsd');
 // Load environment variables from .env file
 require('dotenv').config();
 
 // Configure AWS S3
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({ region: process.env.AWS_REGION || 'us-east-1' });
 const bucket_name = process.env.bucket_name
-
+const statsdClient = new StatsD({ host: process.env.STATSD_HOST || 'localhost', port: 8125 });
+// Configure AWS SDK globally with the region from environment variables
+AWS.config.update({
+  region: process.env.AWS_REGION || 'us-east-1', // Default to 'us-east-1' if AWS_REGION is not set
+});
   // Set up Multer to upload to S3
   const storage = multer.memoryStorage();
   const upload = multer({
@@ -27,9 +31,59 @@ const bucket_name = process.env.bucket_name
       }
     },
   });
-  
-  
-  
+// Utility function to log metrics to CloudWatch
+const logMetric = (metricName, value, unit = 'Milliseconds') => {
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.warn(`Skipping metric ${metricName} due to missing AWS credentials.`);
+    return;
+  }
+
+  const params = {
+    MetricData: [
+      {
+        MetricName: metricName,
+        Dimensions: [{ Name: 'InstanceId', Value: process.env.INSTANCE_ID || 'localhost' }],
+        Unit: unit,
+        Value: value,
+      },
+    ],
+    Namespace: 'WebAppMetrics',
+  };
+
+  const cloudwatch = new AWS.CloudWatch();
+  cloudwatch.putMetricData(params, (err) => {
+    if (err) console.error(`Failed to push metric ${metricName}: ${err}`);
+  });
+};
+// Function to time database and S3 operations
+const timedOperation = async (operation, metricPrefix) => {
+  const start = Date.now();
+  const result = await operation();
+  const duration = Date.now() - start;
+  logMetric(`${metricPrefix}_ExecutionTime, duration`);
+  statsdClient.timing(${metricPrefix}.execution_time, duration);
+  return result;
+};
+
+// Middleware to time API calls and increment count in StatsD
+router.use((req, res, next) => {
+  const start = Date.now();
+  statsdClient.increment(api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count);
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logMetric(`API_${req.method}_${req.path}_ExecutionTime, duration`);
+    statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.execution_time, duration`);
+  });
+  next();
+});
+const timedS3Operation = async (operation, params) => {
+  const start = Date.now();
+  const result = await s3[operation](params).promise();
+  const duration = Date.now() - start;
+  logMetric(`S3_${operation}_ExecutionTime, duration`);  // Logs to CloudWatch
+  statsdClient.timing(`s3.${operation}.execution_time, duration`);  // Logs to StatsD
+  return result;
+};
 // Middleware to check for query parameters
 const checkForQueryParams = (req, res, next) => {
   if (Object.keys(req.query).length > 0) {
@@ -56,18 +110,6 @@ const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
   if (unsupportedMethods.includes(req.method)) {
     return res.sendStatus(405); // Method Not Allowed
 }
-
-// Allow DELETE requests to /user/self/profile-picture without authentication
-//if (req.method === 'DELETE' && req.originalUrl === '/user/self/pic') {
-//   console.log('req.orginalurl', req.originalUrl);
-//   console.log('allowing delete req to /user/self/pic');
-//    return next(); // Allow this specific DELETE request
-//}
-
-// Reject DELETE requests to any other routes
-//if (req.method === 'DELETE') {
-//    return res.sendStatus(403); // Forbidden for all other DELETE requests
-//}
 
   if (unsupportedMethods.includes(req.method)) {
       return res.sendStatus(405); // Method Not Allowed
@@ -116,9 +158,9 @@ router.get('/user/self', authenticateBasic, checkForQueryParams, async (req, res
 
     const userId = req.user.id;
 
-    const user = await User.findByPk(userId, {
+    const user = await timedOperation(()=> User.findByPk(userId, {
       attributes: { exclude: ['password'] } // Exclude the password field
-    });
+    }), 'DBQuery');
 
     if (!user) {
       return res.status(401).json();
@@ -163,19 +205,21 @@ router.post('/user', checkForQueryParams, async (req, res) => {
       }
 
       // Check if email already exists
-      const existingUser = await User.findOne({ where: { email } });
+      const existingUser = await timedOperation(() => User.findOne({ where: { email } }), 'DBQuery');
       if (existingUser) {
           return res.status(400).json();
       }
 
       const hashedPassword = await bcrypt.hash(password, saltRounds); // Hash password
       // Create the new user in the database
-      const newUser = await User.create({
+      const newUser = await timedOperation (() => User.create({
           email,
           firstName,
           lastName,
           password
-      });
+      }),
+      'DBQuery'
+    );
       // Return the user info excluding the password
       return res.status(201).json({
           id: newUser.id,
@@ -214,7 +258,7 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
             return res.status(400).json();
         }
 
-        const user = await User.findByPk(userId);
+        const user = await timedOperation(()=>User.findByPk(userId),'DBQuery');
         if (!user) {
             return res.status(401).json(); // Adjusted to match your tests
         }
@@ -236,7 +280,7 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
         user.account_updated = new Date();
 
         // Save the updated user info
-        await user.save();
+        await timedOperation(() => user.save(), 'DBQuery');
 
         // Respond with 204 No Content (no body)
         return res.status(204).send(); // Change this line
@@ -252,7 +296,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
   try {
         const user = await User.findByPk(userId);
       // Check if the user already has a profile picture
-      const existingPicture = await Image.findOne({ where: { userId} });
+      const existingPicture = await timedOperation(() => Image.findOne({ where: { userId} }), 'DBQuery');
       if (existingPicture) {
           // If the user already has a profile picture, return 400 Bad Request
           return res.status(400).json({ error: 'Profile picture already exists. Delete it before uploading a new one.' });
@@ -272,10 +316,10 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
       };
 
       // Upload the image to S3
-      const data = await s3.upload(uploadParams).promise();
+      const data = await timedOperation(() => s3.upload(uploadParams).promise(), 'S3Upload');
       const imageUrl = data.Location;
       //create a new record
-      const newImage = await Image.create({
+      const newImage = await timedOperation(() => Image.create({
         userId,
         profilePicUrl: imageUrl,
         key: uploadParams.Key,
@@ -286,7 +330,9 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
           content_type: req.file.mimetype,
           upload_date: new Date().toISOString(),
         },
-      });
+        }),
+        'DBQuery'
+      );
       await user.setProfileImage(newImage);
       // Update user with profile picture URL
       user.profilePicUrl = imageUrl;
@@ -309,7 +355,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
 //GET
 router.get('/user/self/pic',authenticateBasic, async(req,res) => {
         try{
-          const profilePicture = await Image.findOne({ where: { userId: req.user.id}});
+          const profilePicture = await timedOperation(() => Image.findOne({ where: { userId: req.user.id}}), 'DBQuery');
           if(!profilePicture){
              return res.status(404).json({error:'profile picture not found'});
           }
@@ -326,7 +372,7 @@ router.get('/user/self/pic',authenticateBasic, async(req,res) => {
 // DELETE /v1/user/self/pic - Delete profile picture
 router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
   try {
-    const profilePicture = await Image.findOne({ where: { userId: req.user.id } });
+    const profilePicture = await timedOperation( () => Image.findOne({ where: { userId: req.user.id } }), 'DBQuery');
     if (!profilePicture) {
       return res.status(404).json({ error: 'Profile picture not found' });
     }
@@ -335,11 +381,9 @@ router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
       Bucket: bucket_name,
       Key: profilePicture.key,
     };
-
-    await s3.deleteObject(deleteParams).promise();
-
+    await timedOperation(() => s3.deleteObject(deleteParams).promise(), 'S3Delete');
     // Remove the profile picture record from the database
-    await profilePicture.destroy();
+    await timedOperation(() => profilePicture.destroy(), 'DBQuery');
 
     res.status(204).end();
   } catch (error) {
