@@ -68,7 +68,7 @@ const timedOperation = async (operation, metricPrefix) => {
 // Middleware to time API calls and increment count in StatsD
 router.use((req, res, next) => {
   const start = Date.now();
-  statsdClient.increment(api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count);
+  statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
   res.on('finish', () => {
     const duration = Date.now() - start;
     logMetric(`API_${req.method}_${req.path}_ExecutionTime, duration`);
