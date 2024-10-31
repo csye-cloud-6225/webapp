@@ -28,7 +28,13 @@ jest.mock('multer-s3', () => {
     _removeFile: jest.fn((req, file, cb) => cb(null)),
   }));
 });
-
+// Mock node-statsd
+jest.mock('node-statsd', () => {
+  return jest.fn().mockImplementation(() => ({
+    increment: jest.fn(),
+    timing: jest.fn(),
+  }));
+});
 
 describe('User API Integration Tests', () => {
   beforeAll(async () => {

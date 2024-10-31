@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const express = require('express');
 const dotenv = require('dotenv');
+const StatsD = require('node-statsd');
 const sequelize = require('./config/database'); // Database connection setup
 const healthzRoutes = require('./routes/healthz'); // Route handlers for health check
 const userRoutes = require('./routes/user'); // Import user routes
@@ -10,9 +11,14 @@ const path = require('path');
 const app = express();
 const port = 8080;
 dotenv.config(); // Load environment variables from .env file
+
 // Set up CloudWatch and region configuration
 AWS.config.update({ region: process.env.AWS_REGION || 'us-east-1' });
 const cloudwatch = new AWS.CloudWatch();
+
+
+// Initialize StatsD client only if not in test environment
+const statsdClient = process.env.NODE_ENV !== 'test' ? new StatsD({ host: 'localhost', port: 8125 }) : { timing: () => {}, increment: () => {} };
 
 // Ensure logs directory and app.log file exist
 const logsDir = path.join(__dirname, 'logs');
@@ -27,23 +33,85 @@ const logToFile = (message) => {
     logStream.write(logMessage);
     console.log(logMessage); // Optional: also log to console
 };
+// Utility function to log CloudWatch metrics
+const logMetric = (metricName, value, unit = 'Milliseconds') => {
+  if (process.env.NODE_ENV === 'test') return;
 
-// Middleware to track API response time and log to CloudWatch
+  const params = {
+      MetricData: [
+          {
+              MetricName: metricName,
+              Dimensions: [{ Name: 'InstanceId', Value: process.env.INSTANCE_ID || 'localhost' }],
+              Unit: unit,
+              Value: value
+          }
+      ],
+      Namespace: 'WebAppMetrics'
+  };
+  cloudwatch.putMetricData(params, (err) => {
+      if (err) logToFile(`Failed to push metric ${metricName}: ${err}`);
+      else logToFile(`Metric ${metricName} pushed successfully`);
+  });
+};
+// Middleware to track API response time and log to CloudWatch and StatsD
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
+        logMetric(`API-${req.method}-${req.path}, duration`);
+        statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}, duration`);
         logToFile(`Request to ${req.method} ${req.path} took ${duration} ms`);
   
     });
     next();
 });
+let dbConnected = false;
 
+// Function to check database connection and log status
+const checkDatabaseConnection = async () => {
+    try {
+        const start = Date.now();
+        await sequelize.authenticate();
+        const dbDuration = Date.now() - start;
+        logMetric('DBConnectionTime', dbDuration);
+        statsdClient.timing('db.connection.time', dbDuration);
+
+        if (!dbConnected) {
+            logToFile('Database connected...');
+            dbConnected = true;
+        }
+    } catch (error) {
+        if (dbConnected) {
+            logToFile(`Unable to connect to the database: ${error.message}`);
+            dbConnected = false;
+        }
+    }
+};
+
+// Check database connection on startup and at intervals
+checkDatabaseConnection();
+if (process.env.NODE_ENV !== 'test') {
+    setInterval(checkDatabaseConnection, 2000); // Check every 2 seconds
+}
+
+// Sync Sequelize schema and log errors to CloudWatch
+sequelize.sync({ force: true })
+    .then(() => logToFile('Database synchronized successfully'))
+    .catch(err => {
+        logToFile(`Detailed Error: ${JSON.stringify(err, null, 2)}`);
+        logMetric('DBSyncError', 1, 'Count');
+    });
 
 
 // Use express.json() to handle JSON payloads
 app.use(express.json());
-
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+      logToFile(`Bad JSON Request: ${err.message}`);
+      return res.status(400).end();
+  }
+  next();
+});
 // Sync database schema with models
 sequelize.sync({ alter: true })
   .then(() => {

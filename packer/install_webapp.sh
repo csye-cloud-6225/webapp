@@ -108,7 +108,7 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agen
             "timestamp_format": "%b %d %H:%M:%S"
           },
           {
-            "file_path": "/opt/webapp/logs/app.log",
+            "file_path": "/opt/webapp/logs/+log",
             "log_group_name": "/aws/ec2/app-logs",
             "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%d %H:%M:%S"
@@ -127,49 +127,49 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 # Verify CloudWatch Agent status
 sudo systemctl status amazon-cloudwatch-agent || exit 1
 
-# # Install and Configure StatsD
-# echo "Installing StatsD and CloudWatch backend for StatsD..."
-# sudo npm install -g statsd statsd-cloudwatch-backend
+# Install and Configure StatsD
+echo "Installing StatsD and CloudWatch backend for StatsD..."
+sudo npm install -g statsd statsd-cloudwatch-backend
 
-# # Create StatsD configuration directory if it doesn't exist
-# sudo mkdir -p /etc/statsd
+# Create StatsD configuration directory if it doesn't exist
+sudo mkdir -p /etc/statsd
 
-# # Create a StatsD configuration file with CloudWatch backend
-# cat <<EOF | sudo tee /etc/statsd/config.js
-# {
-#   port: 8125,
-#   backends: ["statsd-cloudwatch-backend"],
-#   cloudwatch: {
-#     namespace: "WebAppMetrics",
-#     region: process.env.AWS_REGION || "us-east-1"
-#   }
-# }
-# EOF
+# Create a StatsD configuration file with CloudWatch backend
+cat <<EOF | sudo tee /etc/statsd/config.js
+{
+  port: 8125,
+  backends: ["statsd-cloudwatch-backend"],
+  cloudwatch: {
+    namespace: "WebAppMetrics",
+    region: process.env.AWS_REGION || "us-east-1"
+  }
+}
+EOF
 
-# # Configure StatsD as a systemd service
-# echo "Configuring StatsD as a systemd service..."
-# cat <<EOF | sudo tee /etc/systemd/system/statsd.service
-# [Unit]
-# Description=StatsD Service
-# After=network.target
+# Configure StatsD as a systemd service
+echo "Configuring StatsD as a systemd service..."
+cat <<EOF | sudo tee /etc/systemd/system/statsd.service
+[Unit]
+Description=StatsD Service
+After=network.target
 
-# [Service]
-# ExecStart=/usr/local/bin/statsd /etc/statsd/config.js
-# Restart=on-failure
-# StandardOutput=syslog
-# StandardError=syslog
+[Service]
+ExecStart=/usr/local/bin/statsd /etc/statsd/config.js
+Restart=on-failure
+StandardOutput=syslog
+StandardError=syslog
 
-# [Install]
-# WantedBy=multi-user.target
-# EOF
+[Install]
+WantedBy=multi-user.target
+EOF
 
-# # Reload systemd, enable, and start the StatsD service
-# sudo systemctl daemon-reload
-# sudo systemctl enable statsd
-# sudo systemctl start statsd
+# Reload systemd, enable, and start the StatsD service
+sudo systemctl daemon-reload
+sudo systemctl enable statsd
+sudo systemctl start statsd
 
-# # Verify StatsD service status
-# sudo systemctl status statsd || exit 1
+# Verify StatsD service status
+sudo systemctl status statsd || exit 1
 
 log_message "Installation completed!"
 
