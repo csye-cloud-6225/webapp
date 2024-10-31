@@ -68,6 +68,7 @@ const timedOperation = async (operation, metricPrefix) => {
 // Middleware to time API calls and increment count in StatsD
 router.use((req, res, next) => {
   const start = Date.now();
+  console.log(`API Hit: ${req.method} ${req.path}`);
   statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
   res.on('finish', () => {
     const duration = Date.now() - start;
@@ -304,7 +305,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
 
       // Generate a unique file name for the S3 object
       const fileName = `${Date.now()}-${req.file.originalname}`;
-      console.log('originalname is this below ',req.file.originalname); 
+      // console.log('originalname is this below ',req.file.originalname); 
       const uploadParams = {
           Bucket: bucket_name,
           Key: `user-profile-pics/${userId}/${fileName}`,  // Unique key for each file
