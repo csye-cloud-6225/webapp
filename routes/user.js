@@ -69,11 +69,15 @@ const timedOperation = async (operation, metricPrefix) => {
 router.use((req, res, next) => {
   const start = Date.now();
   console.log(`API Hit: ${req.method} ${req.path}`);
+  // Create a consistent metric name
+  const metricName = `API_${req.method}_${req.path.replace(/\//g, '_')}`;
   statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
+  // Log count metric to CloudWatch
+  logMetric(`${metricName}_Count`, 1, 'Count');
   res.on('finish', () => {
-    const duration = Date.now() - start;
-    logMetric(`API_${req.method}_${req.path}_ExecutionTime`, duration);
-    statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.execution_time`, duration);
+      const duration = Date.now() - start;
+      logMetric(`${metricName}_ExecutionTime`, duration);
+      statsdClient.timing(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.execution_time`, duration);
   });
   next();
 });
