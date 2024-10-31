@@ -20,14 +20,11 @@ jest.mock('../models', () => ({
     create: jest.fn(),
   },
 }));
-/// Check if the module exists before mocking it
-// Mock node-statsd
-jest.mock('node-statsd', () => {
-  return jest.fn().mockImplementation(() => ({
-    increment: jest.fn(),
-    timing: jest.fn(),
-  }));
-});
+// Mock node-statsd unconditionally to prevent errors when the module is not found
+jest.mock('node-statsd', () => ({
+  increment: jest.fn(),
+  timing: jest.fn(),
+}));
 // Mock multerS3
 jest.mock('multer-s3', () => jest.fn(() => ({
   // Mock any necessary methods here

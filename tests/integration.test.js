@@ -36,13 +36,11 @@ try {
   // Module does not exist, handle accordingly
 }
 
-// Mock node-statsd
-jest.mock('node-statsd', () => {
-  return jest.fn().mockImplementation(() => ({
-    increment: jest.fn(),
-    timing: jest.fn(),
-  }));
-});
+// Mock node-statsd unconditionally to prevent errors when the module is not found
+jest.mock('node-statsd', () => ({
+  increment: jest.fn(),
+  timing: jest.fn(),
+}));
 
 
 describe('User API Integration Tests', () => {
