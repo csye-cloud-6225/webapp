@@ -61,7 +61,7 @@ const timedOperation = async (operation, metricPrefix) => {
   const result = await operation();
   const duration = Date.now() - start;
   logMetric(`${metricPrefix}_ExecutionTime, duration`);
-  statsdClient.timing(${metricPrefix}.execution_time, duration);
+  statsdClient.timing(`${metricPrefix}.execution_time, duration`);
   return result;
 };
 
