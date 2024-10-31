@@ -108,7 +108,7 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agen
             "timestamp_format": "%b %d %H:%M:%S"
           },
           {
-            "file_path": "/opt/webapp/logs/+log",
+            "file_path": "/opt/webapp/logs/app.log",
             "log_group_name": "/aws/ec2/app-logs",
             "log_stream_name": "{instance_id}",
             "timestamp_format": "%Y-%m-%d %H:%M:%S"
