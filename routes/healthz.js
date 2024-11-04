@@ -16,7 +16,6 @@ const statsdClient = new StatsD({ host: process.env.STATSD_HOST || 'localhost', 
 // Initialize instance metadata token and ID
 let metadataToken = null;
 let tokenExpirationTime = null;
-let instanceId = 'localhost';
 
 // Function to refresh the metadata token if needed
 // async function getMetadataToken() {
