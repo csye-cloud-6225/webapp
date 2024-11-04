@@ -8,8 +8,13 @@ AWS.config.update({ region: process.env.AWS_REGION || 'us-east-1' });
 const statsdClient = new StatsD({ host: process.env.STATSD_HOST || 'localhost', port: 8125 });
 let instanceId = 'localhost';
 
-// Function to retrieve the instance ID
+// Function to retrieve the instance ID using IMDSv2
 async function fetchInstanceId() {
+    if (process.env.NODE_ENV === 'test') {
+        instanceId = 'localhost'; // Use 'localhost' in test environment without warning
+        return;
+    }
+
     try {
         const tokenResponse = await axios.put(
             'http://169.254.169.254/latest/api/token',
@@ -30,11 +35,18 @@ async function fetchInstanceId() {
     }
 }
 
+
 // Fetch instance ID at startup
 fetchInstanceId();
 
 // Utility function to log metrics to CloudWatch
 const logMetric = (metricName, value, unit = 'Milliseconds') => {
+    // Skip metric logging if in test environment or if credentials are missing
+    if (process.env.NODE_ENV === 'test' || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+        console.warn(`Skipping metric ${metricName} due to missing AWS credentials or test environment.`);
+        return;
+    }
+
     const params = {
         MetricData: [
             {
@@ -52,6 +64,7 @@ const logMetric = (metricName, value, unit = 'Milliseconds') => {
         if (err) console.error(`Failed to push metric ${metricName}: ${err}`);
     });
 };
+
 
 // Function to time operations (e.g., database connection checks)
 const timedOperation = async (operation, metricPrefix) => {

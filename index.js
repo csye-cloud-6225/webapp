@@ -24,7 +24,13 @@ const statsdClient = process.env.NODE_ENV !== 'test' ? new StatsD({ host: 'local
 let instanceId = 'localhost';
 
 // Function to retrieve the instance ID
+// Function to retrieve the instance ID using IMDSv2
 async function fetchInstanceId() {
+    if (process.env.NODE_ENV === 'test') {
+        instanceId = 'localhost'; // Use 'localhost' in test environment without warning
+        return;
+    }
+
     try {
         const tokenResponse = await axios.put(
             'http://169.254.169.254/latest/api/token',
@@ -50,6 +56,12 @@ fetchInstanceId();
 
 // Utility function to log metrics to CloudWatch
 const logMetric = (metricName, value, unit = 'Milliseconds') => {
+    // Skip metric logging if in test environment or if credentials are missing
+    if (process.env.NODE_ENV === 'test' || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+        console.warn(`Skipping metric ${metricName} due to missing AWS credentials or test environment.`);
+        return;
+    }
+
     const params = {
         MetricData: [
             {
@@ -62,10 +74,12 @@ const logMetric = (metricName, value, unit = 'Milliseconds') => {
         Namespace: 'WebAppMetrics',
     };
 
+    const cloudwatch = new AWS.CloudWatch();
     cloudwatch.putMetricData(params, (err) => {
         if (err) console.error(`Failed to push metric ${metricName}: ${err}`);
     });
 };
+
 
 // Middleware to track API call counts and response time
 app.use((req, res, next) => {
@@ -82,7 +96,25 @@ app.use((req, res, next) => {
     });
     next();
 });
-
+// Use express.json() to handle JSON payloads
+app.use(express.json());
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+      logToFile(`Bad JSON Request: ${err.message}`);
+      return res.status(400).end();
+  }
+  next();
+})
+// Sync database schema with models
+sequelize.sync({ alter: true })
+  .then(() => {
+    logToFile('Database synchronized successfully');
+    console.log('Database synchronized successfully');
+  })
+  .catch((error) => {
+    logToFile(`Error synchronizing the database: ${error}`);
+    console.error('Error synchronizing the database:', error);
+  });
 // Middleware to check database connection
 const checkDatabaseConnection = async () => {
     try {
@@ -101,7 +133,19 @@ checkDatabaseConnection();
 
 app.use('/healthz', healthzRoutes);
 app.use('/v1', userRoutes);
-
+// Handle unsupported HTTP methods for the /healthz endpoint
+app.all('/healthz', (req, res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.status(405).send(); // Return 405 for unsupported methods
+  });
+  
+  // Custom 404 handler for unknown routes
+  app.use((req, res) => {
+    logToFile(`404 Not Found: ${req.method} ${req.path}`);
+    res.status(404).json(); // Return a JSON error response for unmatched routes
+  });
+  
+  
 if (require.main === module) {
     app.listen(port, () => {
         console.log(`Server is up and running at http://localhost:${port}`);
