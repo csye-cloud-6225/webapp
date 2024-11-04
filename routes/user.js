@@ -134,6 +134,9 @@ const logMetric = (metricName, value, unit = 'Milliseconds') => {
 // Function to time database and S3 operations
 const timedOperation = async (operation, metricPrefix) => {
   const start = Date.now();
+   // Log count metric for each operation
+   logMetric(`${metricPrefix}_Count`, 1, 'Count');  // Only in timedOperation
+
   const result = await operation();
   const duration = Date.now() - start;
   logMetric(`${metricPrefix}_ExecutionTime`, duration);
