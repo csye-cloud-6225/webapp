@@ -80,63 +80,57 @@ AWS.config.update({
 let instanceId = 'localhost';
 
 // Function to retrieve the instance ID using IMDSv2
-// Function to retrieve the instance ID using IMDSv2
 async function fetchInstanceId() {
-  if (process.env.NODE_ENV === 'test') {
-      instanceId = 'localhost'; // Use 'localhost' in test environment without warning
-      return;
-  }
+    try {
+        // Get the IMDSv2 token
+        const tokenResponse = await axios.put(
+            'http://169.254.169.254/latest/api/token',
+            null,
+            { headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' } }
+        );
 
-  try {
-      const tokenResponse = await axios.put(
-          'http://169.254.169.254/latest/api/token',
-          null,
-          { headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' } }
-      );
+        const token = tokenResponse.data;
 
-      const token = tokenResponse.data;
+        // Use the token to fetch the instance ID
+        const instanceResponse = await axios.get(
+            'http://169.254.169.254/latest/meta-data/instance-id',
+            { headers: { 'X-aws-ec2-metadata-token': token } }
+        );
 
-      const instanceResponse = await axios.get(
-          'http://169.254.169.254/latest/meta-data/instance-id',
-          { headers: { 'X-aws-ec2-metadata-token': token } }
-      );
-
-      instanceId = instanceResponse.data;
-  } catch (error) {
-      console.warn("Could not retrieve Instance ID. Using 'localhost' as fallback.");
-  }
+        instanceId = instanceResponse.data;
+        logToFile(`Fetched Instance ID: ${instanceId}`);
+    } catch (error) {
+        console.warn("Could not retrieve Instance ID. Using 'localhost' as fallback.");
+    }
 }
-
 
 // Fetch instance ID at startup
 fetchInstanceId();
 
 // Utility function to log metrics to CloudWatch
 const logMetric = (metricName, value, unit = 'Milliseconds') => {
-  // Skip metric logging if in test environment or if credentials are missing
-  if (process.env.NODE_ENV === 'test' || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      console.warn(`Skipping metric ${metricName} due to missing AWS credentials or test environment.`);
-      return;
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.warn(`Skipping metric ${metricName} due to missing AWS credentials.`);
+    return;
   }
 
   const params = {
-      MetricData: [
-          {
-              MetricName: metricName,
-              Dimensions: [{ Name: 'InstanceId', Value: instanceId || 'localhost' }],
-              Unit: unit,
-              Value: value,
-          },
-      ],
-      Namespace: 'WebAppMetrics',
+    MetricData: [
+      {
+        MetricName: metricName,
+        Dimensions: [{ Name: 'InstanceId', Value: instanceId || 'localhost' }],
+        Unit: unit,
+        Value: value,
+      },
+    ],
+    Namespace: 'WebAppMetrics',
   };
 
   const cloudwatch = new AWS.CloudWatch();
   cloudwatch.putMetricData(params, (err) => {
-      if (err) console.error(`Failed to push metric ${metricName}: ${err}`);
+    if (err) console.error(`Failed to push metric ${metricName}: ${err}`);
   });
 };
-
 // Function to time database and S3 operations
 const timedOperation = async (operation, metricPrefix) => {
   const start = Date.now();
@@ -153,10 +147,9 @@ router.use((req, res, next) => {
   // console.log(`API Hit: ${req.method} ${req.path}`);
   // Create a consistent metric name
   const metricName = `API_${req.method}_${req.path.replace(/\//g, '_')}`;
-  logMetric(`${metricName}_Count`, 1, 'Count');
   statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
   // Log count metric to CloudWatch
-  
+  logMetric(`${metricName}_Count`, 1, 'Count');
   res.on('finish', () => {
       const duration = Date.now() - start;
       logMetric(`${metricName}_ExecutionTime`, duration);
