@@ -22,6 +22,13 @@ jest.mock('aws-sdk', () => {
   };
 });
 
+// Suppress specific console warnings and errors during tests
+global.console = {
+  ...console,
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
 jest.mock('multer-s3', () => {
   return jest.fn(() => ({
     _handleFile: jest.fn((req, file, cb) => cb(null, { location: 'mocked-url' })),
