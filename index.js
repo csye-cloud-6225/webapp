@@ -134,6 +134,8 @@ const logMetric = (metricName, value, unit = 'Milliseconds') => {
 // Middleware to track API response time and log to CloudWatch and StatsD
 app.use((req, res, next) => {
     const start = Date.now();
+    // Increment the count of API hits in CloudWatch
+    logMetric(`API-${req.method}-${req.path}-Count`, 1, 'Count');
     // console.log(`API Hit: ${req.method} ${req.path}`);
     statsdClient.increment(`api.${req.method.toLowerCase()}.${req.path.replace(/\//g, '_')}.count`);
     res.on('finish', () => {
