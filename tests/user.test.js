@@ -11,7 +11,31 @@ jest.mock('../config/database', () => ({
   authenticate: jest.fn().mockResolvedValue(),
   sync: jest.fn().mockResolvedValue(),
 }));
+// Mock AWS SDK CloudWatch and S3
+jest.mock('aws-sdk', () => {
+  const putMetricDataMock = jest.fn((params, callback) => callback(null, {}));
+  const uploadMock = jest.fn((params, callback) => callback(null, { Location: 'mocked-url' }));
 
+  return {
+      S3: jest.fn(() => ({
+          upload: uploadMock,
+          getObject: jest.fn((params, callback) => callback(null, { Body: Buffer.from('mocked data') })),
+          deleteObject: jest.fn((params, callback) => callback(null)),
+      })),
+      CloudWatch: jest.fn(() => ({
+          putMetricData: putMetricDataMock,
+      })),
+      config: {
+          update: jest.fn(),
+      },
+  };
+});
+// Suppress specific console warnings and errors during tests
+global.console = {
+  ...console,
+  warn: jest.fn(),
+  error: jest.fn(),
+};
 // Mock the User model
 jest.mock('../models', () => ({
   User: {
