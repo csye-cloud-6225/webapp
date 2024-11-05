@@ -174,10 +174,12 @@ router.options('/', async (req, res) => {
 
 // API endpoint for GET requests
 router.get('/healthz', async (req, res) => {
+    console.log("Received /healthz request", req.headers, req.query);
     await timedOperation(async () => {
         try {
             // Check for query parameters
             if (Object.keys(req.query).length > 0) {
+                console.log("Returning 400 due to query parameters");
                 return res.status(400).send(); // 400 Bad Request
             }
 
@@ -187,6 +189,7 @@ router.get('/healthz', async (req, res) => {
 
             // If the request is from ELB health checker, allow it
             if (req.headers['user-agent'] === 'ELB-HealthChecker/2.0') {
+                console.log("ELB Health check, returning 200");
                 return res.status(200).send(); // 200 OK for ELB health checks
             }
 
@@ -194,6 +197,7 @@ router.get('/healthz', async (req, res) => {
             const disallowedHeaders = requestHeaders.filter(header => !allowedHeaders.includes(header));
 
             if (disallowedHeaders.length > 0) {
+                console.log("Returning 400 due to disallowed headers:", disallowedHeaders);
                 res.set({
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
                     'Pragma': 'no-cache',
@@ -204,6 +208,7 @@ router.get('/healthz', async (req, res) => {
 
             // Database connection check
             await sequelize.authenticate();
+            console.log("Database connected, returning 200");
             res.set('Cache-Control', 'no-cache'); // Disable caching
             return res.status(200).send(); // 200 OK
         } catch (error) {
@@ -213,6 +218,7 @@ router.get('/healthz', async (req, res) => {
         }
     }, 'GET_Health');
 });
+
 
 
 // Handle unsupported HTTP methods for the /healthz endpoint
