@@ -173,7 +173,7 @@ router.options('/', async (req, res) => {
 });
 
 // API endpoint for GET requests
-router.get('/', async (req, res) => {
+router.get('/healthz', async (req, res) => {
     await timedOperation(async () => {
         try {
             // Check for query parameters
@@ -181,11 +181,16 @@ router.get('/', async (req, res) => {
                 return res.status(400).send(); // 400 Bad Request
             }
 
-            // Allow specific headers or at least ensure we don't block known safe headers
+            // Allow specific headers or allow ELB health checker
             const allowedHeaders = ['user-agent', 'accept', 'host', 'accept-encoding', 'connection', 'postman-token'];
             const requestHeaders = Object.keys(req.headers);
-            
-            // Check for additional headers that are not in allowedHeaders
+
+            // If the request is from ELB health checker, allow it
+            if (req.headers['user-agent'] === 'ELB-HealthChecker/2.0') {
+                return res.status(200).send(); // 200 OK for ELB health checks
+            }
+
+            // For other requests, check for disallowed headers
             const disallowedHeaders = requestHeaders.filter(header => !allowedHeaders.includes(header));
 
             if (disallowedHeaders.length > 0) {
@@ -197,7 +202,8 @@ router.get('/', async (req, res) => {
                 return res.status(400).send(); // 400 Bad Request if disallowed headers are present
             }
 
-            await sequelize.authenticate(); // Check database connection
+            // Database connection check
+            await sequelize.authenticate();
             res.set('Cache-Control', 'no-cache'); // Disable caching
             return res.status(200).send(); // 200 OK
         } catch (error) {
@@ -207,6 +213,7 @@ router.get('/', async (req, res) => {
         }
     }, 'GET_Health');
 });
+
 
 // Handle unsupported HTTP methods for the /healthz endpoint
 router.all('/', (req, res) => {
