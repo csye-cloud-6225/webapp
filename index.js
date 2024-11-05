@@ -32,54 +32,8 @@ const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 const logToFile = (message) => {
     const logMessage = `${new Date().toISOString()} - ${message}\n`;
     logStream.write(logMessage);
-    console.log(logMessage); // Optional: also log to console
+    
 };
-// // Initialize instance metadata token and ID
-// let metadataToken = null;
-// let tokenExpirationTime = null;
-// let instanceId = 'localhost';
-
-// // Function to refresh the metadata token if needed
-// async function getMetadataToken() {
-//     const currentTime = Date.now();
-//     if (metadataToken && currentTime < tokenExpirationTime) {
-//         return metadataToken;
-//     }
-
-//     try {
-//         const response = await axios.put(
-//             'http://169.254.169.254/latest/api/token',
-//             null,
-//             { headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' } }
-//         );
-//         metadataToken = response.data;
-//         tokenExpirationTime = currentTime + 21600 * 1000;
-//         return metadataToken;
-//     } catch (error) {
-//         console.warn("Could not retrieve IMDSv2 token. Using 'localhost' as Instance ID.");
-//         return null;
-//     }
-// }
-
-// // Function to retrieve the instance ID using IMDSv2
-// async function fetchInstanceId() {
-//     try {
-//         const token = await getMetadataToken();
-//         if (!token) return;
-
-//         const instanceResponse = await axios.get(
-//             'http://169.254.169.254/latest/meta-data/instance-id',
-//             { headers: { 'X-aws-ec2-metadata-token': token } }
-//         );
-//         instanceId = instanceResponse.data;
-//         logToFile(`Fetched Instance ID: ${instanceId}`);
-//     } catch (error) {
-//         console.warn("Could not retrieve Instance ID. Using 'localhost' as fallback.");
-//     }
-// }
-
-// // Fetch instance ID at startup
-// fetchInstanceId();
 // Initialize instance metadata token and ID
 let instanceId = 'localhost';
 
