@@ -171,61 +171,27 @@ router.options('/', async (req, res) => {
         }
     }, 'OPTIONS_Health');
 });
-
-router.get('/', async (req, res) => {
-    console.log("Received /healthz request", req.headers, req.query);
-
-    // Immediately respond with 200 for ELB health checks
-    if (req.headers['user-agent'] === 'ELB-HealthChecker/2.0') {
-        console.log("ELB Health check detected, returning 200 OK");
-        return res.status(200).send(); // 200 OK for ELB health checks
+// Middleware to ensure no query parameters or body content is present
+const noPayloadAllowed = (req, res, next) => {
+    if (Object.keys(req.query).length > 0 || Object.keys(req.body).length > 0) {
+      console.log("400 Bad Request due to unexpected query parameters or body content");
+      return res.status(400).send(); // 400 Bad Request if query parameters or body content are present
     }
-
-    await timedOperation(async () => {
-        try {
-            // Step 1: Check for query parameters and log them
-            if (Object.keys(req.query).length > 0) {
-                console.log("Returning 400 due to presence of query parameters:", req.query);
-                return res.status(400).send(); // 400 Bad Request if query parameters are present
-            }
-
-            // Step 2: Define allowed headers and log them
-            const allowedHeaders = ['user-agent', 'accept', 'host', 'accept-encoding', 'connection', 'postman-token'];
-            console.log("Allowed Headers:", allowedHeaders);
-
-            // Step 3: Extract request headers and log them
-            const requestHeaders = Object.keys(req.headers);
-            console.log("Request Headers:", requestHeaders);
-
-            // Step 4: Identify any disallowed headers and log them
-            const disallowedHeaders = requestHeaders.filter(header => !allowedHeaders.includes(header));
-            console.log("Disallowed Headers:", disallowedHeaders);
-
-            // Step 5: Return 400 if any disallowed headers are present
-            if (disallowedHeaders.length > 0) {
-                console.log("Returning 400 due to disallowed headers:", disallowedHeaders);
-                res.set({
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'X-Content-Type-Options': 'nosniff'
-                });
-                return res.status(400).send(); // 400 Bad Request
-            }
-
-            // Step 6: Attempt database connection and log success or failure
-            await sequelize.authenticate();
-            console.log("Database connected successfully, returning 200 OK");
-            res.set('Cache-Control', 'no-cache'); // Disable caching
-            return res.status(200).send(); // 200 OK if database connection is successful
-
-        } catch (error) {
-            // Step 7: Log any database connection errors and return 503
-            console.error('Database connection error:', error);
-            res.set('Cache-Control', 'no-cache'); // Disable caching
-            return res.status(503).send(); // 503 Service Unavailable
-        }
-    }, 'GET_Health');
-});
+    next();
+  };
+// GET request for /healthz with no payload allowed
+router.get("/", noPayloadAllowed, async (req, res) => {
+    try {
+      // Attempt database connection
+      await sequelize.authenticate();
+      console.log("Database connected successfully, returning 200 OK");
+      res.set("Cache-Control", "no-cache");
+      return res.status(200).send(); // 200 OK if database connection succeeds
+    } catch (error) {
+      console.error("503 Service Unavailable - Database connection error:", error);
+      return res.status(503).send(); // 503 Service Unavailable if database connection fails
+    }
+  });
 
 
 
