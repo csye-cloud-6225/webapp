@@ -173,7 +173,7 @@ router.options('/', async (req, res) => {
 });
 
 // API endpoint for GET requests
-router.get('/healthz', async (req, res) => {
+router.get('/', async (req, res) => {
     console.log("Received /healthz request", req.headers, req.query);
     await timedOperation(async () => {
         try {
