@@ -131,6 +131,8 @@ log_message "Displaying CloudWatch Agent configuration file..."
 sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 # Lock down permissions on the JSON file and make it immutable to prevent deletion
+# Unlock the JSON file if modification or removal is needed
+sudo chattr -i /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 sudo chmod 644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 sudo chattr +i /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 log_message "Locked CloudWatch Agent JSON configuration file permissions."
