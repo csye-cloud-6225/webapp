@@ -119,43 +119,15 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agen
   }
 }
 EOF
-# Verify JSON configuration file creation
-if [ -f "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" ]; then
-    echo "CloudWatch Agent JSON configuration file created successfully."
-else
-    echo "Failed to create CloudWatch Agent JSON configuration file." >&2
-    exit 1
-fi
-# Display configuration contents
-log_message "Displaying CloudWatch Agent configuration file..."
-sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-
-# Lock down permissions on the JSON file and make it immutable to prevent deletion
-# Unlock the JSON file if modification or removal is needed
-sudo chattr -i /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-sudo chmod 644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-sudo chattr +i /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-log_message "Locked CloudWatch Agent JSON configuration file permissions."
+#  Remove the tee command, mv from /tmp to /opt
 
 # Start CloudWatch Agent
 echo "Starting CloudWatch Agent..."
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
-
+#  Link the above command's path 
 # Verify CloudWatch Agent status
 sudo systemctl status amazon-cloudwatch-agent || exit 1
-# Check if the file still exists after starting the agent
-if [ -f "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" ]; then
-    echo "CloudWatch Agent JSON configuration file is still present after starting the agent."
-else
-    echo "CloudWatch Agent JSON configuration file is missing after starting the agent." >&2
-    exit 1
-fi
-# Verify CloudWatch Agent status and check logs for any immediate issues
-sudo systemctl status amazon-cloudwatch-agent || exit 1
-if [ -f "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log" ]; then
-    log_message "Displaying recent CloudWatch Agent logs..."
-    sudo tail -n 20 /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log  # Display last 20 lines of the log for troubleshooting
-fi
+
 # Install and Configure StatsD
 echo "Installing StatsD and CloudWatch backend for StatsD..."
 sudo npm install -g statsd statsd-cloudwatch-backend
@@ -202,17 +174,9 @@ sudo systemctl status statsd || exit 1
 
 log_message "Installation completed!"
 
-
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
-# Final check before ending script
-log_message "Final check for CloudWatch Agent JSON configuration file presence..."
-if [ -f "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" ]; then
-    echo "CloudWatch Agent JSON configuration file is present at the end of the script."
-else
-    echo "CloudWatch Agent JSON configuration file went missing at the end of the script." >&2
-    exit 1
-fi
+
 
 # Log completion message
 log_message "Web application setup complete!"
