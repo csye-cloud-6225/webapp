@@ -136,6 +136,10 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 # Verify CloudWatch Agent status
 sudo systemctl status amazon-cloudwatch-agent || exit 1
 
+# Re-check existence of JSON file after starting agent
+log_message "Re-checking CloudWatch Agent JSON file existence:"
+ls -l /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json || echo "JSON file missing after agent start."
+
 # Install and Configure StatsD
 echo "Installing StatsD and CloudWatch backend for StatsD..."
 sudo npm install -g statsd statsd-cloudwatch-backend
@@ -182,7 +186,7 @@ sudo systemctl status statsd || exit 1
 
 log_message "Installation completed!"
 # Verify JSON file persistence in the final steps
-log_message "Verifying CloudWatch Agent JSON file before AMI creation:"
+log_message "final check Verifying CloudWatch Agent JSON file before AMI creation:"
 ls -l /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json || echo "JSON file not found at final check."
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
