@@ -105,7 +105,6 @@ build {
     source      = "${path.root}/install_webapp.sh"
     destination = "/tmp/install_webapp.sh"
   }
-
   provisioner "shell" {
     inline = [
       "echo 'Listing contents of /tmp:'",
