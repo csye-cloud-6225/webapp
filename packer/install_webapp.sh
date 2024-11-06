@@ -119,7 +119,16 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agen
   }
 }
 EOF
+# Verify JSON configuration creation
+if [ -f /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json ]; then
+    log_message "CloudWatch Agent JSON configuration file created successfully."
+else
+    log_message "Error: CloudWatch Agent JSON configuration file not created."
+    exit 1
+fi
 
+# Ensure correct permissions
+sudo chmod 644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 # Start CloudWatch Agent
 echo "Starting CloudWatch Agent..."
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
@@ -172,9 +181,13 @@ sudo systemctl start statsd
 sudo systemctl status statsd || exit 1
 
 log_message "Installation completed!"
+# Verify JSON file persistence in the final steps
+log_message "Verifying CloudWatch Agent JSON file before AMI creation:"
+ls -l /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json || echo "JSON file not found at final check."
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
+sudo ls -la /opt/webapp
 
 
 # Log completion message
