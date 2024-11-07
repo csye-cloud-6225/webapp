@@ -96,7 +96,7 @@ build {
     source      = "${path.root}/my-app.service"
     destination = "/tmp/my-app.service"
   }
-  provisioner to move metrics.json /tmp
+  # provisioner to move metrics.json /tmp
   provisioner "file" {
     source      = "${path.root}/metrics.json"
     destination = "/tmp/metrics.json"
