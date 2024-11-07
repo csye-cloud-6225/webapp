@@ -98,7 +98,7 @@ build {
   }
   # provisioner to move metrics.json /tmp
   provisioner "file" {
-    source      = "${path.root}/metrics.json"
+    source      = "../metrics.json"
     destination = "/tmp/metrics.json"
   }
   provisioner "file" {
