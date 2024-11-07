@@ -96,15 +96,12 @@ build {
     source      = "${path.root}/my-app.service"
     destination = "/tmp/my-app.service"
   }
-  # provisioner to move metrics.json /tmp
-  # provisioner "file" {
-  #   source      = "../metrics.json"
-  #   destination = "/tmp/metrics.json"
-  # }
+
   provisioner "file" {
     source      = "${path.root}/install_webapp.sh"
     destination = "/tmp/install_webapp.sh"
   }
+
   provisioner "shell" {
     inline = [
       "echo 'Listing contents of /tmp:'",

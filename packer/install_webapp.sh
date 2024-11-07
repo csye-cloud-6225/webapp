@@ -175,68 +175,6 @@ log_message "Installation completed!"
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
-# Check if CloudWatch configuration file exists, and recreate if missing
-if [ -f "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" ]; then
-    log_message "CloudWatch configuration file found at /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json."
-else
-    log_message "CloudWatch configuration file not found. Recreating it..."
-
-    # Recreate the CloudWatch configuration file
-    cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-{
-  "agent": {
-    "metrics_collection_interval": 60,
-    "run_as_user": "root"
-  },
-  "metrics": {
-    "append_dimensions": {
-      "InstanceId": "\$${aws:InstanceId}"
-    },
-    "aggregation_dimensions": [["InstanceId"]],
-    "metrics_collected": {
-      "mem": {
-        "measurement": ["mem_used_percent"],
-        "metrics_collection_interval": 60
-      },
-      "cpu": {
-        "measurement": ["cpu_usage_active"],
-        "metrics_collection_interval": 60
-      }
-    }
-  },
-  "logs": {
-    "logs_collected": {
-      "files": {
-        "collect_list": [
-          {
-            "file_path": "/var/log/syslog",
-            "log_group_name": "/aws/ec2/syslog",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%b %d %H:%M:%S"
-          },
-          {
-            "file_path": "/opt/webapp/logs/app.log",
-            "log_group_name": "/aws/ec2/app-logs",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%Y-%m-%d %H:%M:%S"
-          }
-        ]
-      }
-    }
-  }
-}
-EOF
-
-    log_message "CloudWatch configuration file recreated at /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json."
-fi
-
-# Final verification of CloudWatch configuration file
-if [ -f "/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json" ]; then
-    log_message "Final check: CloudWatch configuration file is confirmed at /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json."
-else
-    log_message "Error: CloudWatch configuration file still not found after attempt to recreate."
-    exit 1
-fi
 
 
 # Log completion message
