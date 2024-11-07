@@ -175,9 +175,65 @@ log_message "Installation completed!"
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
-# Display the contents of the amazon-cloudwatch-agent.json file to verify its creation
+# Configure CloudWatch Agent
+echo "Configuring CloudWatch Agent..."
+sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+
+# Create the JSON configuration with correct escaping
+cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root"
+  },
+  "metrics": {
+    "append_dimensions": {
+      "InstanceId": "\${aws:InstanceId}"
+    },
+    "aggregation_dimensions": [["InstanceId"]],
+    "metrics_collected": {
+      "mem": {
+        "measurement": ["mem_used_percent"],
+        "metrics_collection_interval": 60
+      },
+      "cpu": {
+        "measurement": ["cpu_usage_active"],
+        "metrics_collection_interval": 60
+      }
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/syslog",
+            "log_group_name": "/aws/ec2/syslog",
+            "log_stream_name": "{instance_id}",
+            "timestamp_format": "%b %d %H:%M:%S"
+          },
+          {
+            "file_path": "/opt/webapp/logs/app.log",
+            "log_group_name": "/aws/ec2/app-logs",
+            "log_stream_name": "{instance_id}",
+            "timestamp_format": "%Y-%m-%d %H:%M:%S"
+          }
+        ]
+      }
+    }
+  }
+}
+EOF
+
+# Verify file creation and permissions
+echo "Verifying CloudWatch Agent JSON configuration file..."
+sudo chmod 644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+sudo chown root:root /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+# Display the file to confirm its contents
 echo "Displaying contents of amazon-cloudwatch-agent.json..."
 sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
 
 
 # Log completion message
