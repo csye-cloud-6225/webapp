@@ -468,7 +468,7 @@ router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
   try {
     const profilePicture = await timedOperation( () => Image.findOne({ where: { userId: req.user.id } }), 'DBQuery');
     if (!profilePicture) {
-      return res.status(404).json({ error: 'Profile picture not found' });
+      return res.status(404).json();
     }
     console.log('deleting key: ',profilePicture.key);
     const deleteParams = {
