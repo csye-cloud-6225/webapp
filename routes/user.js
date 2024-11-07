@@ -393,7 +393,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
       const existingPicture = await timedOperation(() => Image.findOne({ where: { userId} }), 'DBQuery');
       if (existingPicture) {
           // If the user already has a profile picture, return 400 Bad Request
-          return res.status(400).json({ error: 'Profile picture already exists. Delete it before uploading a new one.' });
+          return res.status(400).json();
       }
 
       // Generate a unique file name for the S3 object
@@ -441,8 +441,8 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
           imageUrl,
       });
   } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      res.status(500).json({ error: 'Error uploading profile picture' });
+      // console.error('Error uploading profile picture:', error);
+      res.status(500).json();
   }
 });
 
@@ -459,7 +459,7 @@ router.get('/user/self/pic',authenticateBasic, async(req,res) => {
             message: 'Profile picture retrieved successfully' });
         }catch(error){
           console.log(error, 'errro retrieving profile pic');
-          res.status(500).json({error: 'error retrieving profile pic'});
+          res.status(500).json();
         }
 }); 
 
@@ -481,8 +481,7 @@ router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
 
     res.status(204).end();
   } catch (error) {
-    console.error('Error deleting profile picture:', error);
-    res.status(500).json({ error: 'Error deleting profile picture' });
+    res.status(500).json();
   }
 });
 
