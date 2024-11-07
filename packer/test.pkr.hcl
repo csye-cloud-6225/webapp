@@ -96,11 +96,11 @@ build {
     source      = "${path.root}/my-app.service"
     destination = "/tmp/my-app.service"
   }
-  # provisioner to move metrics.json /tmp
-  # provisioner "file" {
-  #   source      = "${path.root}/metrics.json"
-  #   destination = "/tmp/metrics.json"
-  # }
+  provisioner to move metrics.json /tmp
+  provisioner "file" {
+    source      = "${path.root}/metrics.json"
+    destination = "/tmp/metrics.json"
+  }
   provisioner "file" {
     source      = "${path.root}/install_webapp.sh"
     destination = "/tmp/install_webapp.sh"

@@ -70,61 +70,71 @@ echo "Installing CloudWatch Agent..."
 curl -s https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -o amazon-cloudwatch-agent.deb
 sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
 
-# Create CloudWatch Agent config directory if it does not exist
-sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+# Move metrics.json to /opt
+if [ -f /opt/webapp/metrics.json ]; then
+    log_message "Moving metrics.json to /opt..."
+    sudo mv /opt/webapp/metrics.json /opt/
+else
+    log_message "Error: metrics.json not found in /opt/webapp!"
+    exit 1
+fi
 
-# Configure CloudWatch Agent
-echo "Configuring CloudWatch Agent..."
-cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-{
-  "agent": {
-    "metrics_collection_interval": 60,
-    "run_as_user": "root"
-  },
-  "metrics": {
-    "append_dimensions": {
-      "InstanceId": "\$${aws:InstanceId}"
-    },
-    "aggregation_dimensions": [["InstanceId"]],
-    "metrics_collected": {
-      "mem": {
-        "measurement": ["mem_used_percent"],
-        "metrics_collection_interval": 60
-      },
-      "cpu": {
-        "measurement": ["cpu_usage_active"],
-        "metrics_collection_interval": 60
-      }
-    }
-  },
-  "logs": {
-    "logs_collected": {
-      "files": {
-        "collect_list": [
-          {
-            "file_path": "/var/log/syslog",
-            "log_group_name": "/aws/ec2/syslog",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%b %d %H:%M:%S"
-          },
-          {
-            "file_path": "/opt/webapp/logs/app.log",
-            "log_group_name": "/aws/ec2/app-logs",
-            "log_stream_name": "{instance_id}",
-            "timestamp_format": "%Y-%m-%d %H:%M:%S"
-          }
-        ]
-      }
-    }
-  }
-}
-EOF
+# # Create CloudWatch Agent config directory if it does not exist
+# sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+
+# # Configure CloudWatch Agent
+# echo "Configuring CloudWatch Agent..."
+# cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+# {
+#   "agent": {
+#     "metrics_collection_interval": 60,
+#     "run_as_user": "root"
+#   },
+#   "metrics": {
+#     "append_dimensions": {
+#       "InstanceId": "\$${aws:InstanceId}"
+#     },
+#     "aggregation_dimensions": [["InstanceId"]],
+#     "metrics_collected": {
+#       "mem": {
+#         "measurement": ["mem_used_percent"],
+#         "metrics_collection_interval": 60
+#       },
+#       "cpu": {
+#         "measurement": ["cpu_usage_active"],
+#         "metrics_collection_interval": 60
+#       }
+#     }
+#   },
+#   "logs": {
+#     "logs_collected": {
+#       "files": {
+#         "collect_list": [
+#           {
+#             "file_path": "/var/log/syslog",
+#             "log_group_name": "/aws/ec2/syslog",
+#             "log_stream_name": "{instance_id}",
+#             "timestamp_format": "%b %d %H:%M:%S"
+#           },
+#           {
+#             "file_path": "/opt/webapp/logs/app.log",
+#             "log_group_name": "/aws/ec2/app-logs",
+#             "log_stream_name": "{instance_id}",
+#             "timestamp_format": "%Y-%m-%d %H:%M:%S"
+#           }
+#         ]
+#       }
+#     }
+#   }
+# }
+# EOF
 #  Remove the tee command, mv from /tmp to /opt
 
 # Start CloudWatch Agent
 echo "Starting CloudWatch Agent..."
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/metrics.json -s
 #  Link the above command's path 
+
 # Verify CloudWatch Agent status
 sudo systemctl status amazon-cloudwatch-agent || exit 1
 
@@ -176,7 +186,16 @@ log_message "Installation completed!"
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
+sudo ls -la /opt
 
+# Check for the existence of metrics.json in /opt
+log_message "Verifying that metrics.json exists in /opt..."
+if [ -f /opt/metrics.json ]; then
+    log_message "Success: metrics.json is present in /opt."
+else
+    log_message "Error: metrics.json is missing in /opt!"
+    exit 1
+fi
 
 # Log completion message
 log_message "Web application setup complete!"
