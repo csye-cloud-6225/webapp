@@ -83,7 +83,7 @@ cat <<EOF | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agen
   },
   "metrics": {
     "append_dimensions": {
-      "InstanceId": "\$${aws:InstanceId}"
+      "InstanceId": "\${aws:InstanceId}"
     },
     "aggregation_dimensions": [["InstanceId"]],
     "metrics_collected": {
@@ -175,6 +175,9 @@ log_message "Installation completed!"
 
 ### Step 9: Verify CloudWatch Agent and Application Setup
 log_message "Listing contents of /opt/webapp..."
+# Display the contents of the amazon-cloudwatch-agent.json file to verify its creation
+echo "Displaying contents of amazon-cloudwatch-agent.json..."
+sudo cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 
 # Log completion message
