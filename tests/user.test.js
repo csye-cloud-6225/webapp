@@ -120,60 +120,67 @@ describe('User API', () => {
 
   describe('PUT /v1/user/self', () => {
     it('should update user information', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        password: 'hashedPassword',
-        save: jest.fn(),
-        is_verified: true,
-      };
+        const mockUser = {
+            id: 1,
+            email: 'test@example.com',
+            firstName: 'John',
+            lastName: 'Doe',
+            password: 'hashedPassword',
+            save: jest.fn(), // Mock the save method
+            is_verified: true, // Ensure the user is verified
+        };
 
-      User.findOne.mockResolvedValue(mockUser);
-      User.findByPk.mockResolvedValue(mockUser);
-      bcrypt.compare.mockResolvedValue(true);
-      bcrypt.hash.mockResolvedValue('newHashedPassword');
+        // Mock database and bcrypt operations
+        User.findOne.mockResolvedValue(mockUser);
+        User.findByPk.mockResolvedValue(mockUser);
+        bcrypt.compare.mockResolvedValue(true); // Simulate password match
+        bcrypt.hash.mockResolvedValue('newHashedPassword'); // Simulate password hashing
 
-      const updateData = {
-        firstName: 'Jane',
-        lastName: 'Smith',
-        password: 'newPassword',
-      };
+        const updateData = {
+            firstName: 'Jane',
+            lastName: 'Smith',
+            password: 'newPassword',
+        };
 
-      const response = await request(app)
-        .put('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password').toString('base64'))
-        .send(updateData);
+        const response = await request(app)
+            .put('/v1/user/self')
+            .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password').toString('base64'))
+            .send(updateData);
 
-      expect(response.status).toBe(204);
-      expect(mockUser.save).toHaveBeenCalled();
+        expect(response.status).toBe(204); // Expect a 204 No Content response
+        expect(mockUser.save).toHaveBeenCalled(); // Ensure the save method was called
+        expect(mockUser.firstName).toBe('Jane'); // Check updated values
+        expect(mockUser.lastName).toBe('Smith');
+        expect(mockUser.password).toBe('newHashedPassword');
     });
 
     it('should return 400 for invalid update fields', async () => {
-      const mockUser = {
-        id: 1,
-        email: 'test@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        password: 'hashedPassword',
-      };
+        const mockUser = {
+            id: 1,
+            email: 'test@example.com',
+            firstName: 'John',
+            lastName: 'Doe',
+            password: 'hashedPassword',
+            is_verified: true,
+        };
 
-      User.findOne.mockResolvedValue(mockUser);
-      bcrypt.compare.mockResolvedValue(true);
+        // Mock database and bcrypt operations
+        User.findOne.mockResolvedValue(mockUser);
+        bcrypt.compare.mockResolvedValue(true); // Simulate password match
 
-      const invalidUpdate = {
-        email: 'newemail@example.com',
-      };
+        const invalidUpdate = {
+            email: 'newemail@example.com', // Invalid field
+        };
 
-      const response = await request(app)
-        .put('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password').toString('base64'))
-        .send(invalidUpdate);
+        const response = await request(app)
+            .put('/v1/user/self')
+            .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password').toString('base64'))
+            .send(invalidUpdate);
 
-      expect(response.status).toBe(400);
+        expect(response.status).toBe(400); // Expect 400 Bad Request
     });
-  });
+});
+
 
   describe('Database Connection', () => {
     it('should authenticate database connection', async () => {
