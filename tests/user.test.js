@@ -25,11 +25,12 @@ const awsSdkMock = jest.mock('aws-sdk', () => ({
   },
 }));
 
-// Mock the database connection
 jest.mock('../config/database', () => ({
   authenticate: jest.fn().mockResolvedValue(),
   sync: jest.fn().mockResolvedValue(),
+  close: jest.fn().mockResolvedValue(), // Add mock close
 }));
+
 
 // Mock the User model
 jest.mock('../models', () => ({
@@ -181,6 +182,29 @@ describe('User API', () => {
   });
 });
 
-afterEach(() => {
-  jest.clearAllMocks();
+afterEach(async () => {
+  jest.restoreAllMocks(); // Restore any mocked functions
+  jest.clearAllTimers(); // Clear timers
 });
+
+
+afterAll(async () => {
+  jest.clearAllMocks();
+
+  // Close Sequelize connection if available
+  if (sequelize && typeof sequelize.close === 'function') {
+      await sequelize.close();
+  }
+
+  // Explicitly exit the process
+  setTimeout(() => {
+      process.exit(0);
+  }, 1000); // Timeout to ensure all tasks complete
+});
+
+
+afterEach(() => {
+  jest.restoreAllMocks(); // Restore any mocked functions
+  jest.clearAllTimers(); // Clear timers
+});
+
