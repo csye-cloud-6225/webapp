@@ -7,6 +7,9 @@ const multerS3 = require('multer-s3');
 const { User,Image } = require('../models'); // Import the User model
 const authRoutes = require('../routes/auth'); // Import auth routes
 const StatsD = require('node-statsd');
+const crypto = require('crypto');
+const sns = new AWS.SNS();
+const { Op } = require('sequelize'); // Import Op from Sequelize
 // Load environment variables from .env file
 require('dotenv').config();
 
@@ -31,52 +34,7 @@ AWS.config.update({
       }
     },
   });
-  // Cached token and instance ID setup
-// let metadataToken = null;
-// let tokenExpirationTime = null;
-// let instanceId = 'localhost';
 
-// // Function to refresh the metadata token if needed
-// async function getMetadataToken() {
-//   const currentTime = Date.now();
-//   if (metadataToken && currentTime < tokenExpirationTime) {
-//     return metadataToken;
-//   }
-
-//   try {
-//     const response = await axios.put(
-//       'http://169.254.169.254/latest/api/token',
-//       null,
-//       { headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' } }
-//     );
-//     metadataToken = response.data;
-//     tokenExpirationTime = currentTime + 21600 * 1000;
-//     return metadataToken;
-//   } catch (error) {
-//     console.warn("Could not retrieve IMDSv2 token. Using 'localhost' as Instance ID.");
-//     return null;
-//   }
-// }
-
-// // Function to retrieve the instance ID using IMDSv2
-// async function fetchInstanceId() {
-//   try {
-//     const token = await getMetadataToken();
-//     if (!token) return;
-
-//     const instanceResponse = await axios.get(
-//       'http://169.254.169.254/latest/meta-data/instance-id',
-//       { headers: { 'X-aws-ec2-metadata-token': token } }
-//     );
-//     instanceId = instanceResponse.data;
-//     console.log(`Fetched Instance ID: ${instanceId}`);
-//   } catch (error) {
-//     console.warn("Could not retrieve Instance ID. Using 'localhost' as fallback.");
-//   }
-// }
-
-// // Fetch instance ID at startup
-// fetchInstanceId();
 let instanceId = 'localhost';
 
 // Function to retrieve the instance ID using IMDSv2
@@ -242,8 +200,58 @@ const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
       return res.status(500).json();
   }
 };
+const verifyUser = async(req, res) => {
+  const { token } = req.query;
+  if (!token){
+    return res.status(400).json({error: "verification token is required"});
+  }
+  try{
+    const user = await User.findOne({
+      where: {
+        verification_token: token,
+        verification_token_expiry: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+    if (!user){
+      return res.status(400).json({error: "Invalid or expired token"});
+    }
+    user.is_verified = true;
+    user.verification_token = null;
+    user.verification_token_expiry = null;
+    await user.save();
+    return res.status(200).json({message: "Email verified successfully"})
+  }catch (error){
+    return res.status(500).json({error: "Internal server error"})
+  }
+}
+router.get('/verify-email', verifyUser);
+const checkEmailVerified = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // Assuming `req.user` is set by `authenticateBasic`
 
-router.get('/user/self', authenticateBasic, checkForQueryParams, async (req, res) => {
+    // Find the user in the database
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the email is verified
+    if (!user.is_verified) {
+      return res.status(403).json({ error: "Email is not verified" });
+    }
+
+    next(); // Email is verified; proceed to the next middleware or route handler
+  } catch (error) {
+    console.error("Error checking email verification:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+router.get('/user/self', authenticateBasic, checkForQueryParams, checkEmailVerified, async (req, res) => {
   try {
     // Check if the request has any payload (i.e., req.body is not empty)
     if (Object.keys(req.body).length > 0) {
@@ -276,55 +284,102 @@ router.get('/user/self', authenticateBasic, checkForQueryParams, async (req, res
 // POST /user/self - Create a new user
 router.post('/user', checkForQueryParams, async (req, res) => {
   try {
-      const { email, firstName, lastName, password } = req.body; // Get user data from request body
+    const { email, firstName, lastName, password } = req.body; // Get user data from request body
 
-      // Validate email
-      if (!email || typeof email !== 'string' || !email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-          return res.status(400).json();
-      }
+    // Validate email
+    if (!email || typeof email !== 'string' || !email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json();
+    }
 
-      // Validate first name
-      if (!firstName || typeof firstName !== 'string' || !firstName.trim() || !/^[A-Za-z]+$/.test(firstName)) {
-          return res.status(400).json();
-      }
+    // Validate first name
+    if (!firstName || typeof firstName !== 'string' || !firstName.trim() || !/^[A-Za-z]+$/.test(firstName)) {
+      return res.status(400).json();
+    }
 
-      // Validate last name
-      if (!lastName || typeof lastName !== 'string' || !lastName.trim() || !/^[A-Za-z]+$/.test(lastName)) {
-          return res.status(400).json();
-      }
+    // Validate last name
+    if (!lastName || typeof lastName !== 'string' || !lastName.trim() || !/^[A-Za-z]+$/.test(lastName)) {
+      return res.status(400).json();
+    }
 
-      // Validate password
-      if (!password || typeof password !== 'string' || password.length < 6) {
-          return res.status(400).json();
-      }
+    // Validate password
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json();
+    }
 
-      // Check if email already exists
-      const existingUser = await timedOperation(() => User.findOne({ where: { email } }), 'DBQuery');
-      if (existingUser) {
-          return res.status(400).json();
-      }
+    // Check if email already exists
+    const existingUser = await timedOperation(() => User.findOne({ where: { email } }), 'DBQuery');
+    if (existingUser) {
+      return res.status(400).json();
+    }
 
-      const hashedPassword = await bcrypt.hash(password, saltRounds); // Hash password
-      // Create the new user in the database
-      const newUser = await timedOperation (() => User.create({
-          email,
-          firstName,
-          lastName,
-          password
+    const hashedPassword = await bcrypt.hash(password, saltRounds); // Hash password
+
+    // Generate a unique verification token and expiry timestamp
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes expiry
+
+    // Create the new user in the database with the token and expiry
+    const newUser = await timedOperation(() =>
+      User.create({
+        email,
+        firstName,
+        lastName,
+        password: hashedPassword,
+        verification_token: verificationToken,
+        verification_token_expiry: verificationTokenExpiry,
       }),
       'DBQuery'
     );
-      // Return the user info excluding the password
-      return res.status(201).json({
-          id: newUser.id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          account_created: newUser.account_created,
-          account_updated: newUser.account_updated
-      });
+
+    // Publish to SNS
+    const snsMessage = JSON.stringify({
+      email,
+      verificationToken,
+      verificationTokenExpiry, // Include the expiry in the message for reference
+    });
+
+    const params = {
+      Message: snsMessage,
+      TopicArn: process.env.SNS_TOPIC_ARN, // Replace with your SNS topic ARN
+    };
+
+    await sns.publish(params).promise();
+
+    // Return the user info excluding the password
+    return res.status(201).json({
+      id: newUser.id,
+      email: newUser.email,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      account_created: newUser.account_created,
+      account_updated: newUser.account_updated,
+    });
   } catch (error) {
-      return res.status(400).json();
+    console.error('Error creating user:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Route to verify the email
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    // Find user by token
+    const user = await User.findOne({ where: { emailVerificationToken: token } });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired token' });
+    }
+
+    // Update the user to mark email as verified
+    await user.update({
+      isEmailVerified: true,
+      emailVerificationToken: null, // Clear the token after verification
+    });
+
+    return res.status(200).json({ message: 'Email verified successfully!' });
+  } catch (error) {
+    return res.status(500).json();
   }
 });
 

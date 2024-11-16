@@ -3,50 +3,37 @@ const app = require('../index'); // Adjust this path if necessary
 const { User } = require('../models'); // Adjust this path if necessary
 const sequelize = require('../config/database'); // Adjust this path if necessary
 
-// Mock AWS SDK, including CloudWatch and S3
-jest.mock('aws-sdk', () => {
-  const uploadMock = jest.fn((params, callback) => callback(null, { Location: 'mocked-url' }));
+jest.mock('../models', () => {
+  const SequelizeMock = require('sequelize-mock');
+  const dbMock = new SequelizeMock();
+
+  const UserMock = dbMock.define('User', {
+    id: 1,
+    email: 'test@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    password: '$2b$10$abcdefghijklmnopqrstuv', // bcrypt hashed password
+    is_verified: true,
+  });
 
   return {
-    S3: jest.fn(() => ({
-      upload: uploadMock,
-      getObject: jest.fn((params, callback) => callback(null, { Body: Buffer.from('mocked data') })),
-      deleteObject: jest.fn((params, callback) => callback(null)),
-    })),
-    CloudWatch: jest.fn(() => ({
-      putMetricData: jest.fn((params, callback) => callback(null, {})),
-    })),
-    config: {
-      update: jest.fn(), // Mock AWS.config.update method to prevent region error
-    },
+    User: UserMock,
   };
 });
 
-// Suppress specific console warnings and errors during tests
-global.console = {
-  ...console,
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-
-jest.mock('multer-s3', () => {
-  return jest.fn(() => ({
-    _handleFile: jest.fn((req, file, cb) => cb(null, { location: 'mocked-url' })),
-    _removeFile: jest.fn((req, file, cb) => cb(null)),
-  }));
-});
-// Mock node-statsd
-jest.mock('node-statsd', () => {
-  return jest.fn().mockImplementation(() => ({
-    increment: jest.fn(),
-    timing: jest.fn(),
-  }));
+jest.mock('../config/database', () => {
+  const SequelizeMock = require('sequelize-mock');
+  const dbMock = new SequelizeMock();
+  dbMock.authenticate = jest.fn().mockResolvedValue();
+  dbMock.sync = jest.fn().mockResolvedValue();
+  dbMock.close = jest.fn().mockResolvedValue();
+  return dbMock;
 });
 
 describe('User API Integration Tests', () => {
   beforeAll(async () => {
     await sequelize.authenticate();
-    await sequelize.sync({ force: true });
+    await sequelize.sync();
   });
 
   afterAll(async () => {
@@ -59,12 +46,10 @@ describe('User API Integration Tests', () => {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-        password: 'password123'
+        password: 'password123',
       };
 
-      const response = await request(app)
-        .post('/v1/user')
-        .send(newUser);
+      const response = await request(app).post('/v1/user').send(newUser);
 
       expect(response.status).toBe(400);
     });
@@ -74,60 +59,66 @@ describe('User API Integration Tests', () => {
         email: 'test@example.com',
         firstName: 'Jane',
         lastName: 'Doe',
-        password: 'password456'
+        password: 'password456',
       };
 
-      const response = await request(app)
-        .post('/v1/user')
-        .send(duplicateUser);
+      const response = await request(app).post('/v1/user').send(duplicateUser);
 
       expect(response.status).toBe(400);
     });
   });
 
   describe('GET /v1/user/self', () => {
-    it('should return 500 when attempting to get authenticated user data', async () => {
+    it('should return 401 when attempting to get authenticated user data with invalid credentials', async () => {
       const response = await request(app)
         .get('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password123').toString('base64'));
+        .set(
+          'Authorization',
+          'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
+        );
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
     });
 
     it('should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/v1/user/self');
+      const response = await request(app).get('/v1/user/self');
 
       expect(response.status).toBe(401);
     });
   });
 
   describe('PUT /v1/user/self', () => {
-    it('should return 500 when updating user information', async () => {
+    it('should return 401 when updating user information without valid credentials', async () => {
       const updateData = {
         firstName: 'Jane',
-        lastName: 'Smith'
+        lastName: 'Smith',
       };
 
       const response = await request(app)
         .put('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password123').toString('base64'))
+        .set(
+          'Authorization',
+          'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
+        )
         .send(updateData);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
     });
 
-    it('should return 500 for invalid update fields', async () => {
+    it('should return 401 for invalid update fields', async () => {
       const invalidUpdate = {
-        email: 'newemail@example.com'
+        email: 'newemail@example.com',
       };
 
       const response = await request(app)
         .put('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password123').toString('base64'))
+        .set(
+          'Authorization',
+          'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
+        )
         .send(invalidUpdate);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
     });
   });
 
@@ -137,22 +128,23 @@ describe('User API Integration Tests', () => {
         email: 'invalid-email',
         firstName: '',
         lastName: '',
-        password: 'short'
+        password: 'short',
       };
 
-      const response = await request(app)
-        .post('/v1/user')
-        .send(invalidUser);
+      const response = await request(app).post('/v1/user').send(invalidUser);
 
       expect(response.status).toBe(400);
     });
 
-    it('should return 500 for invalid credentials', async () => {
+    it('should return 401 for invalid credentials', async () => {
       const response = await request(app)
         .get('/v1/user/self')
-        .set('Authorization', 'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64'));
+        .set(
+          'Authorization',
+          'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
+        );
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(401);
     });
   });
 });
