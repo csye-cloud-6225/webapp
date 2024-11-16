@@ -157,48 +157,50 @@ router.use('/user/self', restrictDeleteOnSelf);
 const saltRounds = 10; // Define salt rounds globally
 
 const authenticateBasic = async (req, res, next) => {
-  try {
-      const authHeader = req.headers['authorization'];
-      console.log('Authorization Header:', authHeader); // Log the authorization header
-
-      if (!authHeader || !authHeader.startsWith('Basic ')) {
-          console.log('Missing or invalid authorization header.');
-          return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const base64Credentials = authHeader.split(' ')[1];
-      const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
-      const [email, password] = credentials.split(':').map(field => field.trim());
-
-      console.log('Decoded Credentials:', { email, password }); // Log decoded credentials
-
-      const user = await User.findOne({ where: { email } });
-      if (!user) {
-          console.log('User not found for email:', email); // Log if user not found
-          return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      console.log('User found:', user.email); // Log if user is found
-
-      const match = await bcrypt.compare(password, user.password);
-      if (!match) {
-          console.log('Password mismatch for user:', email); // Log password mismatch
-          return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      if (!user.is_verified) {
-          console.log('Email not verified for user:', email); // Log unverified email
-          return res.status(403).json({ error: "Email not verified" });
-      }
-
-      req.user = { id: user.id, email: user.email }; // Attach user info to request
-      console.log('Authentication successful for user:', email); // Log successful authentication
-      next();
-  } catch (error) {
-      console.error('Error in authenticateBasic middleware:', error); // Log unexpected errors
-      return res.status(500).json({ error: "Internal server error" });
+  const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
+    // Check if the method is unsupported
+    if (unsupportedMethods.includes(req.method)) {
+      return res.sendStatus(405); // Method Not Allowed
   }
-};
+  
+    if (unsupportedMethods.includes(req.method)) {
+        return res.sendStatus(405); // Method Not Allowed
+    }
+  
+    const authHeader = req.headers['authorization'];
+    // console.log('Incoming request headers:', req.headers);
+  
+    try {
+        if (!authHeader || !authHeader.startsWith('Basic ')) {
+            // console.log('No authorization header found or not Basic Auth');
+            return res.status(401).json();  // Unauthorized
+        }
+  
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+        const [email, password] = credentials.split(':').map(field => field.trim());
+  
+        const user = await User.findOne({ where: { email } });
+  
+        // Check if user exists before comparing passwords
+        if (!user) {
+            return res.status(401).json();
+        }
+  
+        // Compare the entered password with the hashed password
+        const match = await bcrypt.compare(password, user.password);
+  
+        if (!match) {
+            return res.status(401).json();
+        }
+  
+        req.user = { id: user.id, email: user.email }; // Store user info in req.user
+        next();
+    } catch (error) {
+        return res.status(500).json();
+    }
+  };
+  
 const verifyUser = async(req, res) => {
   const { token } = req.query;
   if (!token){
@@ -332,7 +334,7 @@ router.post('/user', checkForQueryParams, async (req, res) => {
         email,
         firstName,
         lastName,
-        password: hashedPassword,
+        password,
         verification_token: verificationToken,
         verification_token_expiry: verificationTokenExpiry,
       }),
