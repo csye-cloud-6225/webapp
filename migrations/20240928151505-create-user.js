@@ -37,6 +37,18 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW // Automatically set when user is created, updated with hooks
       },
+      verification_token: {
+        type: Sequelize.STRING,
+        allowNull: true, // Token is optional and set only when needed
+      },
+      is_verified: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false, // Default is not verified
+      },
+      verification_expiry: {
+        type: Sequelize.DATE,
+        allowNull: true, // Expiry time is optional
+      },
       // Removed profilePicUrl fields since images are managed in a separate table
       createdAt: {
         allowNull: false,

@@ -47,7 +47,18 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW, // Automatically set current date
     },
-    
+    verification_token: {
+      type: DataTypes.STRING,
+      allowNull: true, // Token will only be set when required
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false, // Default is not verified
+    },
+    verification_expiry: {
+      type: DataTypes.DATE,
+      allowNull: true, // Expiry time for the verification token
+    },
     
   }, {
     sequelize,
