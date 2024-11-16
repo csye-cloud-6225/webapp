@@ -157,47 +157,46 @@ router.use('/user/self', restrictDeleteOnSelf);
 const saltRounds = 10; // Define salt rounds globally
 
 const authenticateBasic = async (req, res, next) => {
-const unsupportedMethods = ['HEAD', 'PATCH', 'OPTIONS'];
-  // Check if the method is unsupported
-  if (unsupportedMethods.includes(req.method)) {
-    return res.sendStatus(405); // Method Not Allowed
-}
-
-  if (unsupportedMethods.includes(req.method)) {
-      return res.sendStatus(405); // Method Not Allowed
-  }
-
-  const authHeader = req.headers['authorization'];
-  // console.log('Incoming request headers:', req.headers);
-
   try {
+      const authHeader = req.headers['authorization'];
+      console.log('Authorization Header:', authHeader); // Log the authorization header
+
       if (!authHeader || !authHeader.startsWith('Basic ')) {
-          // console.log('No authorization header found or not Basic Auth');
-          return res.status(401).json();  // Unauthorized
+          console.log('Missing or invalid authorization header.');
+          return res.status(401).json({ error: "Unauthorized" });
       }
 
       const base64Credentials = authHeader.split(' ')[1];
       const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
       const [email, password] = credentials.split(':').map(field => field.trim());
 
+      console.log('Decoded Credentials:', { email, password }); // Log decoded credentials
+
       const user = await User.findOne({ where: { email } });
-
-      // Check if user exists before comparing passwords
       if (!user) {
-          return res.status(401).json();
+          console.log('User not found for email:', email); // Log if user not found
+          return res.status(401).json({ error: "Unauthorized" });
       }
 
-      // Compare the entered password with the hashed password
+      console.log('User found:', user.email); // Log if user is found
+
       const match = await bcrypt.compare(password, user.password);
-
       if (!match) {
-          return res.status(401).json();
+          console.log('Password mismatch for user:', email); // Log password mismatch
+          return res.status(401).json({ error: "Unauthorized" });
       }
 
-      req.user = { id: user.id, email: user.email }; // Store user info in req.user
+      if (!user.is_verified) {
+          console.log('Email not verified for user:', email); // Log unverified email
+          return res.status(403).json({ error: "Email not verified" });
+      }
+
+      req.user = { id: user.id, email: user.email }; // Attach user info to request
+      console.log('Authentication successful for user:', email); // Log successful authentication
       next();
   } catch (error) {
-      return res.status(500).json();
+      console.error('Error in authenticateBasic middleware:', error); // Log unexpected errors
+      return res.status(500).json({ error: "Internal server error" });
   }
 };
 const verifyUser = async(req, res) => {
@@ -253,31 +252,40 @@ const checkEmailVerified = async (req, res, next) => {
 
 router.get('/user/self', authenticateBasic, checkForQueryParams, checkEmailVerified, async (req, res) => {
   try {
-    // Check if the request has any payload (i.e., req.body is not empty)
-    if (Object.keys(req.body).length > 0) {
-      return res.status(400).json();
-    }
+      console.log('Received request for /user/self'); // Log request received
+      console.log('Authenticated user:', req.user); // Log authenticated user info
 
-    const userId = req.user.id;
+      // Check if the request has any payload (i.e., req.body is not empty)
+      if (Object.keys(req.body).length > 0) {
+          console.log('Request contains payload, which is not allowed.');
+          return res.status(400).json({ error: "Request body not allowed for GET" });
+      }
 
-    const user = await timedOperation(()=> User.findByPk(userId, {
-      attributes: { exclude: ['password'] } // Exclude the password field
-    }), 'DBQuery');
+      const userId = req.user.id;
 
-    if (!user) {
-      return res.status(401).json();
-    }
+      console.log('Fetching user details from database for userId:', userId); // Log user ID being fetched
+      const user = await timedOperation(() =>
+          User.findByPk(userId, {
+              attributes: { exclude: ['password'] } // Exclude the password field
+          }), 'DBQuery');
 
-    return res.status(200).json({
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      account_created: user.account_created,
-      account_updated: user.account_updated
-    });
+      if (!user) {
+          console.log('User not found in database for userId:', userId); // Log if user not found
+          return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      console.log('User details retrieved successfully:', user); // Log retrieved user details
+      return res.status(200).json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          account_created: user.account_created,
+          account_updated: user.account_updated
+      });
   } catch (error) {
-    return res.status(500).json();
+      console.error('Error in /user/self endpoint:', error); // Log unexpected errors
+      return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -342,8 +350,14 @@ router.post('/user', checkForQueryParams, async (req, res) => {
       Message: snsMessage,
       TopicArn: process.env.SNS_TOPIC_ARN, // Replace with your SNS topic ARN
     };
-
-    await sns.publish(params).promise();
+    console.log("Publishing to SNS with params:", params);
+    //await sns.publish(params).promise();
+    try {
+      await sns.publish(params).promise();
+      console.log("SNS publish succeeded");
+    } catch (error) {
+      console.error("SNS publish failed:", error);
+    }
 
     // Return the user info excluding the password
     return res.status(201).json({
@@ -361,27 +375,27 @@ router.post('/user', checkForQueryParams, async (req, res) => {
 });
 
 // Route to verify the email
-router.get('/verify-email', async (req, res) => {
-  try {
-    const { token } = req.query;
+// router.get('/verify-email', async (req, res) => {
+//   try {
+//     const { token } = req.query;
 
-    // Find user by token
-    const user = await User.findOne({ where: { emailVerificationToken: token } });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token' });
-    }
+//     // Find user by token
+//     const user = await User.findOne({ where: { emailVerificationToken: token } });
+//     if (!user) {
+//       return res.status(400).json({ message: 'Invalid or expired token' });
+//     }
 
-    // Update the user to mark email as verified
-    await user.update({
-      isEmailVerified: true,
-      emailVerificationToken: null, // Clear the token after verification
-    });
+//     // Update the user to mark email as verified
+//     await user.update({
+//       isEmailVerified: true,
+//       emailVerificationToken: null, // Clear the token after verification
+//     });
 
-    return res.status(200).json({ message: 'Email verified successfully!' });
-  } catch (error) {
-    return res.status(500).json();
-  }
-});
+//     return res.status(200).json({ message: 'Email verified successfully!' });
+//   } catch (error) {
+//     return res.status(500).json();
+//   }
+// });
 
 // PUT /user/self - Update user information
 router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res) => {
