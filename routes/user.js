@@ -203,41 +203,62 @@ const authenticateBasic = async (req, res, next) => {
   
   const verifyUser = async (req, res) => {
     const { token } = req.query;
-    console.log("Received verification token:", token); // Log received token
+  
+    console.log("Verification process started"); // Log when verification starts
+    console.log("Received token:", token); // Log the received token
   
     if (!token) {
-      console.log("Token is missing in the request");
+      console.error("Verification token is missing in the request");
       return res.status(400).json({ error: "Verification token is required" });
     }
   
     try {
+      console.log("Looking for a user with the provided token...");
       const user = await User.findOne({
         where: {
           verification_token: token,
           verification_token_expiry: {
-            [Op.gt]: new Date(), // Ensure token is valid and not expired
+            [Op.gt]: new Date(),
           },
         },
       });
   
       if (!user) {
-        console.log("No user found for the provided token or token has expired");
-        return res.status(404).json({ error: "Invalid or expired token" });
+        console.error(
+          "No user found with the provided token or the token has expired",
+          {
+            token,
+            currentTime: new Date().toISOString(),
+          }
+        );
+        return res.status(400).json({ error: "Invalid or expired token" });
       }
   
-      console.log("User found:", user.email); // Log the email of the user found
+      console.log("User found:", {
+        userId: user.id,
+        email: user.email,
+        is_verified: user.is_verified,
+      });
   
-      // Update the user's verification fields
+      // Update user fields for verification
+      console.log("Updating user verification status...");
       user.is_verified = true;
       user.verification_token = null;
       user.verification_token_expiry = null;
   
-      await user.save(); // Save the updated user to the database
-      console.log("User verification status updated successfully");
+      await user.save();
+      console.log("User verification updated successfully:", {
+        userId: user.id,
+        email: user.email,
+        is_verified: user.is_verified,
+      });
   
       return res.status(200).json({ message: "Email verified successfully" });
     } catch (error) {
-      console.error("Error during verification process:", error);
+      console.error("An error occurred during the verification process:", {
+        errorMessage: error.message,
+        stack: error.stack,
+      });
       return res.status(500).json({ error: "Internal server error" });
     }
   };
