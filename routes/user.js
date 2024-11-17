@@ -217,7 +217,7 @@ const authenticateBasic = async (req, res, next) => {
       const user = await User.findOne({
         where: {
           verification_token: token,
-          verification_token_expiry: {
+          verification_expiry: {
             [Op.gt]: new Date(),
           },
         },
@@ -244,7 +244,7 @@ const authenticateBasic = async (req, res, next) => {
       console.log("Updating user verification status...");
       user.is_verified = true;
       user.verification_token = null;
-      user.verification_token_expiry = null;
+      user.verification_expiry = null;
   
       await user.save();
       console.log("User verification updated successfully:", {
@@ -373,7 +373,7 @@ router.post('/user', checkForQueryParams, async (req, res) => {
         lastName,
         password,
         verification_token: verificationToken,
-        verification_token_expiry: verificationTokenExpiry,
+        verification_expiry: verificationTokenExpiry,
       }),
       'DBQuery'
     );
