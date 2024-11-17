@@ -141,21 +141,21 @@ jobs:
               --query 'LaunchTemplates[0].LatestVersionNumber' --output text)
             echo "Latest Launch Template Version: $VERSION"
             aws autoscaling update-auto-scaling-group \
-              --auto-scaling-group-name csye6225-web-app-asg \
+              --auto-scaling-group-name csye6225_asg \
               --launch-template "LaunchTemplateName=csye6225_asg,Version=$VERSION"
 
 
       - name: Start Instance refresh and monitor
         run: |
             REFRESH_ID=$(aws autoscaling start-instance-refresh \
-              --auto-scaling-group-name csye6225-web-app-asg \
+              --auto-scaling-group-name csye6225_asg \
               --query 'InstanceRefreshId' \
               --output text)
             echo "Started instance refresh with ID $REFRESH_ID"
             ls -l #List files to confirm the setup before entering the monitor
             while true; do
               STATUS=$(aws autoscaling describe-instance-refreshes \
-                --auto-scaling-group-name csye6225-web-app-asg \
+                --auto-scaling-group-name csye6225_asg \
                 --query "InstanceRefreshes[?InstanceRefreshId=='$REFRESH_ID'].Status" \
                 --output text)
 
@@ -172,5 +172,4 @@ jobs:
               fi
             done 
 
-            
             
