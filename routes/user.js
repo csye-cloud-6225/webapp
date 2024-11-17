@@ -227,7 +227,7 @@ const verifyUser = async(req, res) => {
     return res.status(500).json({error: "Internal server error"})
   }
 }
-router.get('/verify-email', verifyUser);
+router.get('/verify', verifyUser);
 const checkEmailVerified = async (req, res, next) => {
   try {
     const userId = req.user.id; // Assuming `req.user` is set by `authenticateBasic`
