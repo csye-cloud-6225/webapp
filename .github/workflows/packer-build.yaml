@@ -61,7 +61,7 @@ jobs:
           instance_type = "t2.small"
           ssh_username = "ubuntu"
           source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-01559dcd81713aec8"
+          subnet_id = "subnet-07b381b768fd0c9b4"
           EOF
 
       - name: Initialize Packer
