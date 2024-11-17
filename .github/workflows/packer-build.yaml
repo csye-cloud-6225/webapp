@@ -16,7 +16,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ AWS_DEMO_SECRET_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_KEY_ID }}
           aws-region: us-east-1
 
       - name: Setup Packer
@@ -171,11 +171,3 @@ jobs:
                 sleep 30
               fi
             done 
-
-
-              
-            
-
-      
-          
-      
