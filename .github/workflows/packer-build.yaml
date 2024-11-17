@@ -76,17 +76,8 @@ jobs:
       - name: Build AMI
         run: |
           cd packer-template
-          # Run packer build and capture output
-          AMI_OUTPUT=$(packer build -debug -var-file=variables.pkrvars.hcl test.pkr.hcl)
-          echo "$AMI_OUTPUT"  # Print output for debugging
-          # Extract the AMI ID from the output
-          AMI_ID=$(echo "$AMI_OUTPUT" | grep -oE 'ami-[a-zA-Z0-9]{17}')
-          if [[ -z "$AMI_ID" ]]; then
-            echo "Failed to capture AMI ID."
-            exit 1
-          fi
-          echo "Captured AMI_ID: $AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV  # Store AMI ID as an environment variable
+          packer build -debug -manifest -var-file=variables.pkrvars.hcl \
+            test.pkr.hcl
           
       #Set up the AWS ACCOUNT
       - name: SET UP AWS CLI 
@@ -105,13 +96,13 @@ jobs:
         run: sudo apt-get install -y jq
 
       #check packer manifest and set AMI ID from manifest
-      # - name: Checking packer manifest and set AMI ID from manifest
-      #   run: |
-      #       cd packer #naviagte to the packer directory
-      #       cat manifest.json #Display the content of the packer manifest file
-      #       AMI_ID=$(jq -r '.builds[-1].artifact_id | split(":") | .[1]' manifest.json)
-      #       echo "AMI_ID=${AMI_ID}" >> $GITHUB_ENV #Set the AMI_ID as env variables
-      #       echo "AMI_ID set to: $AMI_ID" #Verify that the value is correctly set
+      - name: Checking packer manifest and set AMI ID from manifest
+        run: |
+            cd packer #naviagte to the packer directory
+            cat manifest.json #Display the content of the packer manifest file
+            AMI_ID=$(jq -r '.builds[-1].artifact_id | split(":") | .[1]' manifest.json)
+            echo "AMI_ID=${AMI_ID}" >> $GITHUB_ENV #Set the AMI_ID as env variables
+            echo "AMI_ID set to: $AMI_ID" #Verify that the value is correctly set
 
       #Verify AMI_ID before moving ahead
       - name: Verify AMI_ID is correctly set
