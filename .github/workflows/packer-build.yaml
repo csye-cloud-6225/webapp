@@ -60,8 +60,6 @@ jobs:
           aws_region = "us-east-1"
           instance_type = "t2.small"
           ssh_username = "ubuntu"
-          source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-01559dcd81713aec8"
           EOF
 
       - name: Initialize Packer
@@ -173,4 +171,3 @@ jobs:
             done 
 
 
-            
