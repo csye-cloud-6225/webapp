@@ -98,7 +98,7 @@ jobs:
       #check packer manifest and set AMI ID from manifest
       - name: Checking packer manifest and set AMI ID from manifest
         run: |
-            cd packer-template #naviagte to the packer directory
+            cd packer #naviagte to the packer directory
             cat manifest.json #Display the content of the packer manifest file
             AMI_ID=$(jq -r '.builds[-1].artifact_id | split(":") | .[1]' manifest.json)
             echo "AMI_ID=${AMI_ID}" >> $GITHUB_ENV #Set the AMI_ID as env variables
