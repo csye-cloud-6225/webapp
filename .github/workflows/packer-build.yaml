@@ -77,8 +77,8 @@ jobs:
       - name: Build AMI
         run: |
           cd packer-template
-          packer build -debug -var-file=variables.pkrvars.hcl \
-            test.pkr.hcl
+          set -x 
+          packer build -debug -machine-readable -var "aws_region=us-east-1" test.pkr.hcl > packer-output.log
           
       #Set up the AWS ACCOUNT
       - name: SET UP AWS CLI 
