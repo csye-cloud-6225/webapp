@@ -20,10 +20,12 @@ jobs:
             echo "Using DEV environment credentials"
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_DEV_ACCESS_KEY_ID }}" >> $GITHUB_ENV
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_DEV_SECRET_KEY_ID }}" >> $GITHUB_ENV
+            echo "SUBNET_ID=${{ secrets.SUBNET_DEV_ID }}" >> $GITHUB_ENV
           elif [[ "${{ env.DEPLOY_ENVIRONMENT }}" == "demo" ]]; then
             echo "Using DEMO environment credentials"
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}" >> $GITHUB_ENV
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_DEMO_SECRET_KEY_ID }}" >> $GITHUB_ENV
+            echo "SUBNET_ID=${{ secrets.SUBNET_DEMO_ID }}" >> $GITHUB_ENV
           else
             echo "Invalid DEPLOY_ENVIRONMENT: ${{ env.DEPLOY_ENVIRONMENT }}"
             exit 1
@@ -72,7 +74,7 @@ jobs:
           instance_type = "t2.small"
           ssh_username = "ubuntu"
           source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-07b381b768fd0c9b4"
+          subnet_id = "${{ env.SUBNET_ID }}"
           EOF
 
       - name: Initialize Packer
