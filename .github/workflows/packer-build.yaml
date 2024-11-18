@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+env:
+  DEPLOY_ENVIRONMENT:${{secrets.DEPLY_ENVIRONMENT}}
 
 jobs:
   build-ami:
@@ -15,8 +17,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Setup Packer
@@ -62,7 +64,7 @@ jobs:
           instance_type = "t2.small"
           ssh_username = "ubuntu"
           source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-07b381b768fd0c9b4"
+          subnet_id = "subnet-069b8b69b0690cd5c"
           EOF
 
       - name: Initialize Packer
