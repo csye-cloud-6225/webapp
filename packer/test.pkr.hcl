@@ -78,15 +78,15 @@ source "amazon-ebs" "my-ami" {
   ami_users     = ["438465161714"]
 
 }
-
-build {
-  sources = ["source.amazon-ebs.my-ami"]
-
-  post-processors {
+post-processors {
     manifest {
       output = "manifest.json"
     }
-  }
+}
+build {
+  sources = ["source.amazon-ebs.my-ami"]
+
+  
 
   provisioner "file" {
     source      = "${path.root}/webapp.zip"
