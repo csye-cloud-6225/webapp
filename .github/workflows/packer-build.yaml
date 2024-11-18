@@ -5,7 +5,7 @@ on:
     branches:
       - main
 env:
-  DEPLOY_ENVIRONMENT:${{secrets.DEPLOY_ENVIRONMENT}}
+  DEPLOY_ENVIRONMENT: ${{ secrets.DEPLOY_ENVIRONMENT }}
 
 jobs:
   build-ami:
