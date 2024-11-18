@@ -437,7 +437,7 @@ router.post('/user', checkForQueryParams, async (req, res) => {
 // });
 
 // PUT /user/self - Update user information
-router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res) => {
+router.put('/user/self', authenticateBasic, checkForQueryParams, checkEmailVerified, async (req, res) => {
     try {
         const userId = req.user.id;
         const { firstName, lastName, password, email, account_created, account_updated, ...extraFields } = req.body;
@@ -491,7 +491,7 @@ router.put('/user/self', authenticateBasic, checkForQueryParams, async (req, res
     }
 });
 // POST /v1/user/self/pic - Upload profile picture
-router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), async (req, res) => {
+router.post('/user/self/pic', authenticateBasic,checkEmailVerified, upload.single('profilePic'), async (req, res) => {
   const userId = req.user.id;
   console.log('user is is ',userId);
   
@@ -555,7 +555,7 @@ router.post('/user/self/pic', authenticateBasic, upload.single('profilePic'), as
 });
 
 //GET
-router.get('/user/self/pic',authenticateBasic, async(req,res) => {
+router.get('/user/self/pic',authenticateBasic,checkEmailVerified, async(req,res) => {
         try{
           const profilePicture = await timedOperation(() => Image.findOne({ where: { userId: req.user.id}}), 'DBQuery');
           if(!profilePicture){
@@ -572,7 +572,7 @@ router.get('/user/self/pic',authenticateBasic, async(req,res) => {
 }); 
 
 // DELETE /v1/user/self/pic - Delete profile picture
-router.delete('/user/self/pic', authenticateBasic, async (req, res) => {
+router.delete('/user/self/pic', authenticateBasic,checkEmailVerified, async (req, res) => {
   try {
     const profilePicture = await timedOperation( () => Image.findOne({ where: { userId: req.user.id } }), 'DBQuery');
     if (!profilePicture) {
