@@ -79,6 +79,12 @@ source "amazon-ebs" "my-ami" {
 build {
   sources = ["source.amazon-ebs.my-ami"]
 
+  post-processors {
+    manifest {
+      output = "manifest.json"
+    }
+  }
+
   provisioner "file" {
     source      = "${path.root}/webapp.zip"
     destination = "/tmp/webapp.zip"
