@@ -150,9 +150,8 @@ build {
       "echo 'Running install_webapp.sh'"
     ]
   }
-  post-processors {
-    manifest {
-      output = "manifest.json"
-    }
+  post-processor "manifest" {
+    output     = "manifest.json"
+    strip_path = true
   }
 }
