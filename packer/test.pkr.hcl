@@ -82,11 +82,7 @@ source "amazon-ebs" "my-ami" {
 build {
   sources = ["source.amazon-ebs.my-ami"]
 
-  post-processors {
-    manifest {
-      output = "manifest.json"
-    }
-  }
+
 
   provisioner "file" {
     source      = "${path.root}/webapp.zip"
@@ -153,5 +149,10 @@ build {
       "echo 'Making install_webapp.sh executable'",
       "echo 'Running install_webapp.sh'"
     ]
+  }
+  post-processors {
+    manifest {
+      output = "manifest.json"
+    }
   }
 }
