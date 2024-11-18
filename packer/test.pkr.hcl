@@ -78,11 +78,7 @@ source "amazon-ebs" "my-ami" {
   ami_users     = ["438465161714"]
 
 }
-post-processors {
-    manifest {
-      output = "manifest.json"
-    }
-}
+
 build {
   sources = ["source.amazon-ebs.my-ami"]
 
@@ -153,5 +149,10 @@ build {
       "echo 'Making install_webapp.sh executable'",
       "echo 'Running install_webapp.sh'"
     ]
+  }
+  post-processors {
+    manifest {
+      output = "manifest.json"
+    }
   }
 }
