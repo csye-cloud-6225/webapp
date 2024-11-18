@@ -39,7 +39,10 @@ variable "source_ami" {
   type    = string
   default = "ami-0cad6ee50670e3d0e"
 }
-
+variable "instance_type" {
+  type    = string
+  default = "t2.small"
+}
 variable "ssh_username" {
   type    = string
   default = "ubuntu"
