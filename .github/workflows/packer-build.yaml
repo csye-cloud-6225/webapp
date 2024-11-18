@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - main
-# env:
-#   DEPLOY_ENVIRONMENT: ${{ secrets.DEPLOY_ENVIRONMENT }}
+env:
+  DEPLOY_ENVIRONMENT:${{secrets.DEPLOY_ENVIRONMENT}}
 
 jobs:
   build-ami:
@@ -15,11 +15,19 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+        run: |
+          if [[ "${{ env.DEPLOY_ENVIRONMENT }}" == "dev" ]]; then
+            echo "Using DEV environment credentials"
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_DEV_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_DEV_SECRET_KEY_ID }}" >> $GITHUB_ENV
+          elif [[ "${{ env.DEPLOY_ENVIRONMENT }}" == "demo" ]]; then
+            echo "Using DEMO environment credentials"
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_DEMO_SECRET_KEY_ID }}" >> $GITHUB_ENV
+          else
+            echo "Invalid DEPLOY_ENVIRONMENT: ${{ env.DEPLOY_ENVIRONMENT }}"
+            exit 1
+          fi
 
       - name: Setup Packer
         uses: hashicorp/setup-packer@main
@@ -64,7 +72,7 @@ jobs:
           instance_type = "t2.small"
           ssh_username = "ubuntu"
           source_ami = "ami-0cad6ee50670e3d0e"
-          subnet_id = "subnet-069b8b69b0690cd5c"
+          subnet_id = "subnet-07b381b768fd0c9b4"
           EOF
 
       - name: Initialize Packer
@@ -86,8 +94,8 @@ jobs:
       - name: SET UP AWS CLI 
         uses: aws-actions/configure-aws-credentials@v2
         with:
-            aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_KEY_ID }}
+            aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
             aws-region: us-east-1
 
       #List files after aws cli setup
