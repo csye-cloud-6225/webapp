@@ -262,6 +262,83 @@ const authenticateBasic = async (req, res, next) => {
   //     return res.status(500).json({ error: "Internal server error" });
   //   }
   // };
+  // const verifyUser = async (req, res) => {
+  //   const { token } = req.query;
+  
+  //   console.log("Verification process started"); // Log when verification starts
+  //   console.log("Received token:", token); // Log the received token
+  
+  //   if (!token) {
+  //     console.error("Verification token is missing in the request");
+  //     return res.status(400).json({ error: "Verification token is required" });
+  //   }
+  
+  //   try {
+  //     console.log("Looking for a user with the provided token...");
+  //     const user = await User.findOne({
+  //       where: {
+  //         [Op.or]: [
+  //           {
+  //             verification_token: token,
+  //             verification_expiry: {
+  //               [Op.gt]: new Date(),
+  //             },
+  //           },
+  //           {
+  //             verification_token: null,
+  //             is_verified: true,
+  //           },
+  //         ],
+  //       },
+  //     });
+  
+  //     if (!user) {
+  //       console.error(
+  //         "No user found with the provided token or the token has expired",
+  //         {
+  //           token,
+  //           currentTime: new Date().toISOString(),
+  //         }
+  //       );
+  //       return res.status(400).json({ error: "Invalid or expired token" });
+  //     }
+  
+  //     if (user.is_verified) {
+  //       console.log("User is already verified:", {
+  //         userId: user.id,
+  //         email: user.email,
+  //       });
+  //       return res.status(200).json({ message: "Email already verified" });
+  //     }
+  
+  //     console.log("User found:", {
+  //       userId: user.id,
+  //       email: user.email,
+  //       is_verified: user.is_verified,
+  //     });
+  
+  //     // Update user fields for verification
+  //     console.log("Updating user verification status...");
+  //     user.is_verified = true;
+  //     user.verification_token = null;
+  //     user.verification_expiry = null;
+  
+  //     await user.save();
+  //     console.log("User verification updated successfully:", {
+  //       userId: user.id,
+  //       email: user.email,
+  //       is_verified: user.is_verified,
+  //     });
+  
+  //     return res.status(200).json({ message: "Email verified successfully" });
+  //   } catch (error) {
+  //     console.error("An error occurred during the verification process:", {
+  //       errorMessage: error.message,
+  //       stack: error.stack,
+  //     });
+  //     return res.status(500).json({ error: "Internal server error" });
+  //   }
+  // };
   const verifyUser = async (req, res) => {
     const { token } = req.query;
   
@@ -277,38 +354,27 @@ const authenticateBasic = async (req, res, next) => {
       console.log("Looking for a user with the provided token...");
       const user = await User.findOne({
         where: {
-          [Op.or]: [
-            {
-              verification_token: token,
-              verification_expiry: {
-                [Op.gt]: new Date(),
-              },
-            },
-            {
-              verification_token: null,
-              is_verified: true,
-            },
-          ],
+          verification_token: token,
+          verification_expiry: {
+            [Op.gt]: new Date(),
+          },
         },
       });
   
       if (!user) {
-        console.error(
-          "No user found with the provided token or the token has expired",
-          {
-            token,
-            currentTime: new Date().toISOString(),
-          }
-        );
-        return res.status(400).json({ error: "Invalid or expired token" });
-      }
+        console.log("No user found with a valid or non-expired token.");
   
-      if (user.is_verified) {
-        console.log("User is already verified:", {
-          userId: user.id,
-          email: user.email,
+        // Check if the email associated with the token is already verified
+        const verifiedUser = await User.findOne({
+          where: { verification_token: null, is_verified: true },
         });
-        return res.status(200).json({ message: "Email already verified" });
+  
+        if (verifiedUser) {
+          console.log("User with this email is already verified.");
+          return res.status(403).json({ error: "Email already verified" });
+        }
+  
+        return res.status(400).json({ error: "Invalid or expired token" });
       }
   
       console.log("User found:", {
