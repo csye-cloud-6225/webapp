@@ -377,10 +377,12 @@ router.post('/user', checkForQueryParams, async (req, res) => {
       }),
       'DBQuery'
     );
-
+    // Generate the complete verification link
+    const verificationLink = `${req.protocol}://${req.get('host')}/v1/user/self/verify?token=${verificationToken}`;
     // Publish to SNS
     const snsMessage = JSON.stringify({
       email,
+      verificationLink,
       verificationToken,
       verificationTokenExpiry, // Include the expiry in the message for reference
     });
