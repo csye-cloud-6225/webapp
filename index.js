@@ -175,7 +175,7 @@ app.use(checkDbConnection);
 
 // API endpoint routes
 app.use('/healthz', healthzRoutes);
-// app.use('/cicd', healthzRoutes);
+app.use('/cicd', healthzRoutes);
 app.use('/v1', userRoutes);
 
 // Handle unsupported HTTP methods for the /healthz endpoint
