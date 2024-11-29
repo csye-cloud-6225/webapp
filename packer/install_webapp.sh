@@ -12,6 +12,12 @@ log_message "Step 1: Updating packages and installing dependencies..."
 sudo apt-get update
 sudo apt-get install -y nodejs npm unzip
 
+# Step 1.1: Install AWS CLI
+log_message "Installing AWS CLI..."
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -o awscliv2.zip
+sudo ./aws/install
+aws --version || { log_message "AWS CLI installation failed!"; exit 1; }
 
 # Step 2: Unzip webapp.zip to /opt/webapp
 log_message "Unzipping webapp.zip to /opt/webapp..."
