@@ -295,7 +295,7 @@ const checkEmailVerified = async (req, res, next) => {
 };
 
 
-router.get('/user/self', authenticateBasic, checkForQueryParams, checkEmailVerified, async (req, res) => {
+router.get('/v2/user/self', authenticateBasic, checkForQueryParams, checkEmailVerified, async (req, res) => {
   try {
       console.log('Received request for /user/self'); // Log request received
       console.log('Authenticated user:', req.user); // Log authenticated user info
