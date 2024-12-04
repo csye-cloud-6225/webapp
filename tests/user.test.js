@@ -86,7 +86,7 @@ describe('User API', () => {
     });
   });
 
-  describe('GET /v1/user/self', () => {
+  describe('GET /v1/v2/user/self', () => {
     it('should return user data when authenticated', async () => {
       const mockUser = {
         id: 1,
@@ -104,7 +104,7 @@ describe('User API', () => {
       bcrypt.compare.mockResolvedValue(true);
 
       const response = await request(app)
-        .get('/v1/user/self')
+        .get('/v1/v2/user/self')
         .set('Authorization', 'Basic ' + Buffer.from('test@example.com:password').toString('base64'));
 
       expect(response.status).toBe(200);
@@ -113,7 +113,7 @@ describe('User API', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      const response = await request(app).get('/v1/user/self');
+      const response = await request(app).get('/v1/v2/user/self');
       expect(response.status).toBe(401);
     });
   });

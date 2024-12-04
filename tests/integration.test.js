@@ -68,10 +68,10 @@ describe('User API Integration Tests', () => {
     });
   });
 
-  describe('GET /v1/user/self', () => {
+  describe('GET /v1/v2/user/self', () => {
     it('should return 401 when attempting to get authenticated user data with invalid credentials', async () => {
       const response = await request(app)
-        .get('/v1/user/self')
+        .get('/v1/v2/user/self')
         .set(
           'Authorization',
           'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
@@ -81,7 +81,7 @@ describe('User API Integration Tests', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      const response = await request(app).get('/v1/user/self');
+      const response = await request(app).get('/v1/v2/user/self');
 
       expect(response.status).toBe(401);
     });
@@ -138,7 +138,7 @@ describe('User API Integration Tests', () => {
 
     it('should return 401 for invalid credentials', async () => {
       const response = await request(app)
-        .get('/v1/user/self')
+        .get('/v1/v2/user/self')
         .set(
           'Authorization',
           'Basic ' + Buffer.from('test@example.com:wrongpassword').toString('base64')
